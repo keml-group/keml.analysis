@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Analysis
+Bundle-SymbolicName: keml.analysis
+Bundle-Version: 1.0.0.qualifier
+Automatic-Module-Name: keml.analysis
+Bundle-RequiredExecutionEnvironment: JavaSE-21
