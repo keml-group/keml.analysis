@@ -67,11 +67,18 @@ public class NodeAnalyser {
 		  .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 	}
 	
+	// write according to headers into line
 	public <T> void writeForPartners(Map<String, T> content, String firstColumn, CSVPrinter csvPrinter, T defaultValue) throws IOException {
-		// TODO write according to headers into line
-		System.out.println(content);
-		//List<String> r = 
-		csvPrinter.printRecord(firstColumn );		
+		csvPrinter.print(firstColumn );
+		partners.forEach(p -> {
+			try {
+				csvPrinter.print(content.getOrDefault(p, defaultValue));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}		
+		});
+		csvPrinter.printRecord();
 	}
 
 }
