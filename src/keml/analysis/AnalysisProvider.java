@@ -14,8 +14,7 @@ public class AnalysisProvider {
 		System.out.println(target);
 
 		Conversation conv = new KemlFileHandler().loadKeml(source);
-		new NodeAnalyser();
-		NodeAnalyser.createCSV(conv, target);
+		new NodeAnalyser(conv).createCSV(target);
 	}
 
 }

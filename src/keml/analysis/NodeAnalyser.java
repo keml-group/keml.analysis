@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -13,25 +14,35 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
 import keml.Conversation;
+import keml.ReceiveMessage;
+import keml.SendMessage;
+import keml.MessageExecution;
 
 public class NodeAnalyser {
 	
-	// Conversation conv;
+	Conversation conv;
+	List<String> partners;
 	
-	public static void createCSV(Conversation conv, String path) throws IOException {
+	
+	public NodeAnalyser(Conversation conv) {
+		super();
+		this.conv = conv;
+		this.partners = listConversationPartnersWithTrailer(); //header row for small tables
+	}
+
+	public void createCSV(String path) throws IOException {
 		
         BufferedWriter writer = Files.newBufferedWriter(Paths.get(path));
         try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 			csvPrinter.printRecord("MessagePart");
-			List<String> partners = listConversationPartnersWithTrailer(conv);
 			csvPrinter.printRecord(partners);
-			listMessageCounts(conv);
+			writeMessageCounts(conv);
 			
 			csvPrinter.flush();
 		}
 	}
 	
-	public static List<String> listConversationPartnersWithTrailer(Conversation conv) throws IOException {
+	public List<String> listConversationPartnersWithTrailer() {
 		List<String> partners = conv.getConversationPartners().stream().map(s -> s.getName()).toList();
 		ArrayList<String> partnersWithTrailer = new ArrayList<String>();
 		partnersWithTrailer.add("");
@@ -39,11 +50,20 @@ public class NodeAnalyser {
 		return partners;
 	}
 	
-	public static void listMessageCounts(Conversation conv) {
-		var r = conv.getAuthor().getMessageExecutions().stream()
+	public static void writeMessageCounts(Conversation conv) {
+		Map<Boolean, List<MessageExecution>> isSend = conv.getAuthor().getMessageExecutions().stream()
+				.collect(Collectors.partitioningBy( m -> m instanceof SendMessage));	
+		var sent = countByName(isSend.get(true));
+		var receive = countByName(isSend.get(false));
+		// TODO write according to headers into line
+		System.out.println(sent);
+		System.out.println(receive);
+	}
+	
+	public static Map<String, Long> countByName(List<MessageExecution> msgs) {
+		return msgs.stream()
 		.map(s -> s.getCounterPart().getName())
-		.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-		System.out.println(r);
+		  .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 	}
 
 }
