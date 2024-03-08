@@ -55,9 +55,19 @@ public class NodeAnalyser {
 				.collect(Collectors.partitioningBy( m -> m instanceof SendMessage));	
 		var sent = countByName(isSend.get(true));
 		var receive = countByName(isSend.get(false));
+		var interrupted = countByName(
+				isSend.get(false).stream()
+				.filter(msg -> {
+					ReceiveMessage m = (ReceiveMessage) msg;
+					return m.isIsInterrupted();
+				})
+				.toList()
+			);
 		// TODO write according to headers into line
 		System.out.println(sent);
 		System.out.println(receive);
+		System.out.println(interrupted);
+		
 	}
 	
 	public static Map<String, Long> countByName(List<MessageExecution> msgs) {
