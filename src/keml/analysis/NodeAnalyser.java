@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -19,19 +21,29 @@ public class NodeAnalyser {
 	public static void createCSV(Conversation conv, String path) throws IOException {
 		
         BufferedWriter writer = Files.newBufferedWriter(Paths.get(path));
-        CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT);
-        csvPrinter.printRecord("MessagePart");
-        printConversationPartners(conv, csvPrinter);
-        
-		csvPrinter.flush();
+        try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
+			csvPrinter.printRecord("MessagePart");
+			List<String> partners = listConversationPartnersWithTrailer(conv);
+			csvPrinter.printRecord(partners);
+			listMessageCounts(conv);
+			
+			csvPrinter.flush();
+		}
 	}
 	
-	public static void printConversationPartners(Conversation conv, CSVPrinter csvPrinter) throws IOException {
+	public static List<String> listConversationPartnersWithTrailer(Conversation conv) throws IOException {
 		List<String> partners = conv.getConversationPartners().stream().map(s -> s.getName()).toList();
-		ArrayList<String> partnersWithTrailer = new ArrayList();
+		ArrayList<String> partnersWithTrailer = new ArrayList<String>();
 		partnersWithTrailer.add("");
 		partnersWithTrailer.addAll(partners);
-		csvPrinter.printRecord(partners);
+		return partners;
+	}
+	
+	public static void listMessageCounts(Conversation conv) {
+		var r = conv.getAuthor().getMessageExecutions().stream()
+		.map(s -> s.getCounterPart().getName())
+		.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+		System.out.println(r);
 	}
 
 }
