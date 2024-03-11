@@ -5,14 +5,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
+import keml.Author;
 import keml.Conversation;
 import keml.ReceiveMessage;
 import keml.SendMessage;
@@ -35,15 +38,62 @@ public class NodeAnalyser {
         BufferedWriter writer = Files.newBufferedWriter(Paths.get(path));
         try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 			csvPrinter.printRecord("MessagePart");
-			csvPrinter.print("");
-			csvPrinter.printRecord(partners);
-			writeMessageCounts(csvPrinter);
+			printPartnerHeaderRow(csvPrinter);
+			writeMessageCounts(csvPrinter);		
+			csvPrinter.printRecord();
+			
+			csvPrinter.printRecord("KnowledgePart");
+			csvPrinter.printRecord("Preknowledge", conv.getAuthor().getPreknowledge().size());
+			HashMap<InformationType, Map<String, Long>> newInfos = countNewInformationByPartner();
+			Long allNew = newInfos.get(InformationType.OVERALL).values().stream().collect(Collectors.reducing(0L, (x, y) -> Long.sum(x, y)));
+			csvPrinter.printRecord("NewInformation", allNew);
+			printPartnerHeaderRow(csvPrinter);
+			//TODO use three entries
+			
+			writeForPartners(newInfos.get(InformationType.OVERALL), "all", csvPrinter, 0L);
+			writeForPartners(newInfos.get(InformationType.FACT), "facts", csvPrinter, 0L);
+			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "instructions", csvPrinter, 0L);
 			
 			csvPrinter.flush();
 		}
 	}
 	
-	public void writeMessageCounts(CSVPrinter csvPrinter) throws IOException {
+	private void printPartnerHeaderRow(CSVPrinter csvPrinter) throws IOException {
+		csvPrinter.print("");
+		csvPrinter.printRecord(partners);
+	}
+	
+	enum InformationType {
+		INSTRUCTION, FACT, OVERALL;
+	}
+	
+	private HashMap<InformationType, Map<String, Long>> countNewInformationByPartner() {
+		List<String> instructions = new ArrayList<String>();
+		List<String> facts = new ArrayList<String>();
+		List<String> overall = new ArrayList<String>(); //could be computed from the other two if we ever ran into memory issues
+		
+		conv.getAuthor().getMessageExecutions().stream()
+			.filter(m -> m instanceof ReceiveMessage).forEach(ms -> {
+				ReceiveMessage msg = (ReceiveMessage) ms;
+				String partner = msg.getCounterPart().getName();
+				msg.getGenerates().forEach(info -> {
+					overall.add(partner);
+					if (info.isIsInstruction())
+						instructions.add(partner);
+					else
+						facts.add(partner);
+				});		
+		});
+		
+		HashMap<InformationType, Map<String, Long>> res = new HashMap<InformationType, Map<String, Long>>();
+		res.put(InformationType.INSTRUCTION, countFromStringStream(instructions.stream()));
+		res.put(InformationType.FACT, countFromStringStream(facts.stream()));
+		res.put(InformationType.OVERALL, countFromStringStream(overall.stream()));
+		
+		return res;	
+	}
+	
+	private void writeMessageCounts(CSVPrinter csvPrinter) throws IOException {
 		Map<Boolean, List<MessageExecution>> isSend = conv.getAuthor().getMessageExecutions().stream()
 				.collect(Collectors.partitioningBy( m -> m instanceof SendMessage));	
 		var sent = countByName(isSend.get(true));
@@ -61,14 +111,17 @@ public class NodeAnalyser {
 		writeForPartners(interrupted, "Interrupted", csvPrinter, 0L);
 	}
 	
-	public static Map<String, Long> countByName(List<MessageExecution> msgs) {
+	private static Map<String, Long> countByName(List<MessageExecution> msgs) {
 		return msgs.stream()
-		.map(s -> s.getCounterPart().getName())
-		  .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+		  .collect(Collectors.groupingBy(s -> s.getCounterPart().getName(), Collectors.counting()));
 	}
 	
-	// write according to headers into line
-	public <T> void writeForPartners(Map<String, T> content, String firstColumn, CSVPrinter csvPrinter, T defaultValue) throws IOException {
+	private static Map<String, Long> countFromStringStream(Stream<String> stream) {
+		return stream.collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+	}
+	
+	// write according to header line partners into line
+	private <T> void writeForPartners(Map<String, T> content, String firstColumn, CSVPrinter csvPrinter, T defaultValue) throws IOException {
 		csvPrinter.print(firstColumn );
 		partners.forEach(p -> {
 			try {
