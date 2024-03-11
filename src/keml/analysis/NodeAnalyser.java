@@ -44,13 +44,13 @@ public class NodeAnalyser {
 			
 			csvPrinter.printRecord("KnowledgePart");
 			csvPrinter.printRecord("Preknowledge", conv.getAuthor().getPreknowledge().size());
+			csvPrinter.print("New Information");
+			csvPrinter.printRecord(partners);
 			HashMap<InformationType, Map<String, Long>> newInfos = countNewInformationByPartner();
-			Long allNew = newInfos.get(InformationType.OVERALL).values().stream().collect(Collectors.reducing(0L, (x, y) -> Long.sum(x, y)));
-			csvPrinter.printRecord("NewInformation", allNew);
-			printPartnerHeaderRow(csvPrinter);
-			//TODO use three entries
-			
-			writeForPartners(newInfos.get(InformationType.OVERALL), "all", csvPrinter, 0L);
+			//Long allNew = newInfos.get(InformationType.OVERALL).values().stream().collect(Collectors.reducing(0L, (x, y) -> Long.sum(x, y)));
+			//csvPrinter.printRecord("NewInformation", allNew);
+			//printPartnerHeaderRow(csvPrinter);			
+			//writeForPartners(newInfos.get(InformationType.OVERALL), "all", csvPrinter, 0L);
 			writeForPartners(newInfos.get(InformationType.FACT), "facts", csvPrinter, 0L);
 			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "instructions", csvPrinter, 0L);
 			
