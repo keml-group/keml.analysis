@@ -6,7 +6,6 @@ Bundle-Version: 1.0.0.qualifier
 Require-Bundle: org.eclipse.emf.ecore;bundle-version="2.35.0",
  org.eclipse.core.runtime,
  org.apache.commons.commons-io,
- keml;visibility:=reexport,
  org.eclipse.emf.edit;visibility:=reexport,
  keml;visibility:=reexport
 Import-Package: keml,
