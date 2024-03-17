@@ -24,13 +24,18 @@ import keml.MessageExecution;
 public class NodeAnalyser {
 	
 	Conversation conv;
-	List<String> partners;
+	List<String> partners; //works as headers
+	List<ReceiveMessage> receives;  //starting point for work on knowledge part
 	
 	
 	public NodeAnalyser(Conversation conv) {
 		super();
 		this.conv = conv;
 		this.partners = conv.getConversationPartners().stream().map(s -> s.getName()).toList(); //works as header row
+		this.receives = conv.getAuthor().getMessageExecutions().stream()
+				.filter(m -> m instanceof ReceiveMessage).map(ms -> {
+					return (ReceiveMessage) ms;
+				}).toList();
 	}
 
 	public void createCSV(String path) throws IOException {
@@ -51,8 +56,10 @@ public class NodeAnalyser {
 			//csvPrinter.printRecord("NewInformation", allNew);
 			//printPartnerHeaderRow(csvPrinter);			
 			//writeForPartners(newInfos.get(InformationType.OVERALL), "all", csvPrinter, 0L);
-			writeForPartners(newInfos.get(InformationType.FACT), "facts", csvPrinter, 0L);
-			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "instructions", csvPrinter, 0L);
+			writeForPartners(newInfos.get(InformationType.FACT), "Facts", csvPrinter, 0L);
+			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "Instructions", csvPrinter, 0L);
+			csvPrinter.printRecord("Trust:");
+			csvPrinter.printRecord("Repetitions", countRepetitions());
 			
 			csvPrinter.flush();
 		}
@@ -72,17 +79,15 @@ public class NodeAnalyser {
 		List<String> facts = new ArrayList<String>();
 		List<String> overall = new ArrayList<String>(); //could be computed from the other two if we ever ran into memory issues
 		
-		conv.getAuthor().getMessageExecutions().stream()
-			.filter(m -> m instanceof ReceiveMessage).forEach(ms -> {
-				ReceiveMessage msg = (ReceiveMessage) ms;
-				String partner = msg.getCounterPart().getName();
-				msg.getGenerates().forEach(info -> {
-					overall.add(partner);
-					if (info.isIsInstruction())
-						instructions.add(partner);
-					else
-						facts.add(partner);
-				});		
+		receives.forEach(msg -> {
+			String partner = msg.getCounterPart().getName();
+			msg.getGenerates().forEach(info -> {
+				overall.add(partner);
+				if (info.isIsInstruction())
+					instructions.add(partner);
+				else
+					facts.add(partner);
+			});
 		});
 		
 		HashMap<InformationType, Map<String, Long>> res = new HashMap<InformationType, Map<String, Long>>();
@@ -91,6 +96,10 @@ public class NodeAnalyser {
 		res.put(InformationType.OVERALL, countFromStringStream(overall.stream()));
 		
 		return res;	
+	}
+	
+	private Integer countRepetitions() {
+		return receives.stream().mapToInt(s -> s.getRepeats().size()).sum();
 	}
 	
 	private void writeMessageCounts(CSVPrinter csvPrinter) throws IOException {
