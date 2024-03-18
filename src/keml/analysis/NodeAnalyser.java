@@ -35,7 +35,7 @@ public class NodeAnalyser {
 				.filter(m -> m instanceof ReceiveMessage).map(ms -> {
 					return (ReceiveMessage) ms;
 				}).toList();
-		infoAnalyser = new InformationPartAnalyser(partners, receives);
+		infoAnalyser = new InformationPartAnalyser(partners, receives, conv.getAuthor().getPreknowledge());
 	}
 
 	public void createCSV(String path) throws IOException {

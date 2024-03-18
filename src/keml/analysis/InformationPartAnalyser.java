@@ -2,49 +2,57 @@ package keml.analysis;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.commons.csv.CSVPrinter;
 
 import keml.Information;
 import keml.InformationLinkType;
 import keml.NewInformation;
+import keml.PreKnowledge;
 import keml.ReceiveMessage;
 
 public class InformationPartAnalyser {
 	
 	List<String> partners; //works as headers
 	int dimension; // for analysis of message connections
+	List<PreKnowledge> preKnowledge;
 	List<ReceiveMessage> receives;  //starting point for work on knowledge part
 	List<NewInformation> newInfos;
 
-	public InformationPartAnalyser(List<String> partners, List<ReceiveMessage> receives) {
+
+	public InformationPartAnalyser(List<String> partners, List<ReceiveMessage> receives, List<PreKnowledge> preKnowledge) {
 		this.partners = partners;
 		dimension = (partners.size()+1)*2;
 		this.receives = receives;
 		this.newInfos = receives.stream().map(m -> m.getGenerates()).flatMap(List::stream).toList();
+		this.preKnowledge = preKnowledge;
 	}
 	
 	public void writeInformationConnections(CSVPrinter csvPrinter) throws IOException {
 		//matrix holds fact and instruction entry for the author (for pre-knowledge) and each partner
 		int[][] countAttacks = new int[dimension][dimension];
 		int[][] countSupports = new int[dimension][dimension];
-		newInfos.forEach(info -> {
-			int index = getIndexOfInfo(info);
-			info.getCauses().forEach(link -> {
-				int partnerIndex = getIndexOfInfo(link.getTarget());
-				if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.ACCEPT) {
-					countSupports[index][partnerIndex] +=1;
-				}
-				if (link.getType() == InformationLinkType.CHALLENGE || link.getType() == InformationLinkType.REJECT) {
-					countAttacks[index][partnerIndex] +=1;
-				}
-				// todo analyse supplements?
+		
+		Stream.concat(newInfos.stream(), preKnowledge.stream())
+			.forEach(info -> {
+				int index = getIndexOfInfo(info);
+				info.getCauses().forEach(link -> {
+					int partnerIndex = getIndexOfInfo(link.getTarget());
+					if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.ACCEPT) {
+						countSupports[index][partnerIndex] +=1;
+					}
+					if (link.getType() == InformationLinkType.CHALLENGE || link.getType() == InformationLinkType.REJECT) {
+						countAttacks[index][partnerIndex] +=1;
+					}
+					// todo analyse supplements?
+				});
 			});
-		});
 		
 		String[][] text = combineMatrices(countAttacks, countSupports);
 		writeMatrix(text, csvPrinter);	
 	}
+
 
 	// writes both matrices a, b into one having entries "a/b"
 	// assumption is that a and b are square matrices and have the same length dimensions
