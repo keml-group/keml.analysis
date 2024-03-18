@@ -15,27 +15,32 @@ import java.util.stream.Stream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
-import keml.Author;
 import keml.Conversation;
+import keml.Information;
+import keml.InformationLinkType;
 import keml.ReceiveMessage;
 import keml.SendMessage;
 import keml.MessageExecution;
+import keml.NewInformation;
 
 public class NodeAnalyser {
 	
 	Conversation conv;
 	List<String> partners; //works as headers
+	int dimension; // for analysis of message connections
 	List<ReceiveMessage> receives;  //starting point for work on knowledge part
-	
+	List<NewInformation> newInfos;
 	
 	public NodeAnalyser(Conversation conv) {
 		super();
 		this.conv = conv;
 		this.partners = conv.getConversationPartners().stream().map(s -> s.getName()).toList(); //works as header row
+		dimension = (partners.size()+1)*2;
 		this.receives = conv.getAuthor().getMessageExecutions().stream()
 				.filter(m -> m instanceof ReceiveMessage).map(ms -> {
 					return (ReceiveMessage) ms;
 				}).toList();
+		this.newInfos = receives.stream().map(m -> m.getGenerates()).flatMap(List::stream).toList();
 	}
 
 	public void createCSV(String path) throws IOException {
@@ -45,8 +50,7 @@ public class NodeAnalyser {
 			csvPrinter.printRecord("MessagePart");
 			printPartnerHeaderRow(csvPrinter);
 			writeMessageCounts(csvPrinter);		
-			csvPrinter.printRecord();
-			
+			csvPrinter.printRecord();		
 			csvPrinter.printRecord("KnowledgePart");
 			csvPrinter.printRecord("Preknowledge", conv.getAuthor().getPreknowledge().size());
 			csvPrinter.print("New Information");
@@ -60,10 +64,79 @@ public class NodeAnalyser {
 			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "Instructions", csvPrinter, 0L);
 			csvPrinter.printRecord("Trust:");
 			csvPrinter.printRecord("Repetitions", countRepetitions());
-			
+			writeInformationConnections(csvPrinter);
 			csvPrinter.flush();
 		}
         System.out.println("Wrote analysis to " + path);
+	}
+		
+	private void writeInformationConnections(CSVPrinter csvPrinter) throws IOException {
+		//matrix holds fact and instruction entry for the author (for pre-knowledge) and each partner
+		int[][] countAttacks = new int[dimension][dimension];
+		int[][] countSupports = new int[dimension][dimension];
+		newInfos.forEach(info -> {
+			int index = getIndexOfInfo(info);
+			info.getCauses().forEach(link -> {
+				int partnerIndex = getIndexOfInfo(link.getTarget());
+				if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.ACCEPT) {
+					countSupports[index][partnerIndex] +=1;
+				}
+				if (link.getType() == InformationLinkType.CHALLENGE || link.getType() == InformationLinkType.REJECT) {
+					countAttacks[index][partnerIndex] +=1;
+				}
+				// todo analyse supplements?
+			});
+		});
+		
+		String[][] text = combineMatrices(countAttacks, countSupports);
+		writeMatrix(text, csvPrinter);	
+	}
+	
+	// writes both matrices a, b into one having entries "a/b"
+	// assumption is that a and b are square matrices and have the same length dimensions
+	private String[][] combineMatrices(int[][] a, int[][]b) {
+		String[][] result = new String[dimension][dimension];
+		for (int i = 0; i < dimension; i++) {
+			for (int j=0; j < dimension; j++) {
+				result[i][j] = a[i][j]+"/"+b[i][j];
+			}
+		}
+		return result;
+	}
+	
+	String[] headers() {
+		String[] headers = new String[dimension];
+		for (int i = 0; i< partners.size(); i++) {
+			headers[2*i] = partners.get(i) + " Facts";
+			headers[2*i+1] = partners.get(i) + " Instructions";
+		}
+		headers[dimension-2]= "Author Facts";
+		headers[dimension-1]= "Author Instructions";
+		return headers;
+	}
+
+	
+	// writes both matrices A, B into one having entries "a/b"
+	private void writeMatrix(String[][] m, CSVPrinter csvPrinter) throws IOException {
+		String[] headers = headers();
+		csvPrinter.print("Attacks/Supports");
+		csvPrinter.printRecord(headers);
+		for (int i = 0; i < dimension; i++) {
+			csvPrinter.print(headers[i]);
+			csvPrinter.printRecord(m[i]);
+		}
+	}
+	
+	private int getIndexOfInfo(Information info) {
+		int offset;
+		if (info.isIsInstruction()) offset = 1; else offset = 0;
+		int partnerIndex;
+		if (info instanceof NewInformation) {
+			partnerIndex = partners.indexOf(((NewInformation) info).getSourceConversationPartner().getName());
+		} else {
+			partnerIndex = partners.size();
+		}
+		return 2*partnerIndex + offset;
 	}
 	
 	private void printPartnerHeaderRow(CSVPrinter csvPrinter) throws IOException {
@@ -89,13 +162,11 @@ public class NodeAnalyser {
 				else
 					facts.add(partner);
 			});
-		});
-		
+		});	
 		HashMap<InformationType, Map<String, Long>> res = new HashMap<InformationType, Map<String, Long>>();
 		res.put(InformationType.INSTRUCTION, countFromStringStream(instructions.stream()));
 		res.put(InformationType.FACT, countFromStringStream(facts.stream()));
 		res.put(InformationType.OVERALL, countFromStringStream(overall.stream()));
-		
 		return res;	
 	}
 	
