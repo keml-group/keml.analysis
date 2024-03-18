@@ -63,6 +63,7 @@ public class NodeAnalyser {
 			
 			csvPrinter.flush();
 		}
+        System.out.println("Wrote analysis to " + path);
 	}
 	
 	private void printPartnerHeaderRow(CSVPrinter csvPrinter) throws IOException {
