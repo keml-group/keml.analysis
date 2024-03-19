@@ -19,23 +19,35 @@ import keml.Conversation;
 import keml.ReceiveMessage;
 import keml.SendMessage;
 import keml.MessageExecution;
+import keml.NewInformation;
 
-public class NodeAnalyser {
+public class ConversationAnalyser {
 	
 	Conversation conv;
 	List<String> partners; //works as headers
 	List<ReceiveMessage> receives;  //starting point for work on knowledge part
 	InformationPartAnalyser infoAnalyser;
 	
-	public NodeAnalyser(Conversation conv) {
-		super();
+	public ConversationAnalyser(Conversation conv) {
 		this.conv = conv;
-		this.partners = conv.getConversationPartners().stream().map(s -> s.getName()).toList(); //works as header row
-		this.receives = conv.getAuthor().getMessageExecutions().stream()
+		this.partners = getPartnerNames(conv); //works as header row
+		this.receives = getReceives(conv);
+		infoAnalyser = new InformationPartAnalyser(partners, receives, conv.getAuthor().getPreknowledge());
+	}
+	
+	public static List<String> getPartnerNames(Conversation conv) {
+		return conv.getConversationPartners().stream().map(s -> s.getName()).toList();
+	}
+	
+	public static List<ReceiveMessage> getReceives(Conversation conv) {
+		return conv.getAuthor().getMessageExecutions().stream()
 				.filter(m -> m instanceof ReceiveMessage).map(ms -> {
 					return (ReceiveMessage) ms;
 				}).toList();
-		infoAnalyser = new InformationPartAnalyser(partners, receives, conv.getAuthor().getPreknowledge());
+	}
+	
+	public static List<NewInformation> getNewInfos(List<ReceiveMessage> receives) {
+		return receives.stream().map(m -> m.getGenerates()).flatMap(List::stream).toList();
 	}
 
 	public void createCSV(String path) throws IOException {

@@ -25,7 +25,7 @@ public class InformationPartAnalyser {
 		this.partners = partners;
 		dimension = (partners.size()+1)*2;
 		this.receives = receives;
-		this.newInfos = receives.stream().map(m -> m.getGenerates()).flatMap(List::stream).toList();
+		this.newInfos = ConversationAnalyser.getNewInfos(receives);
 		this.preKnowledge = preKnowledge;
 	}
 	

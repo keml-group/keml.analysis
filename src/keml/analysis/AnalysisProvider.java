@@ -19,7 +19,8 @@ public class AnalysisProvider {
 				String source = file.getAbsolutePath();
 				String target = FilenameUtils.removeExtension(source) + ".csv";
 				Conversation conv = new KemlFileHandler().loadKeml(source);
-				new NodeAnalyser(conv).createCSV(target);
+				new ConversationAnalyser(conv).createCSV(target);
+				new TrustEvaluator(conv).analyse(source);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
