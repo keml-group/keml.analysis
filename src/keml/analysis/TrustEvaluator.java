@@ -128,13 +128,13 @@ public class TrustEvaluator {
 		case SUPPORT:
 			edgeWeight = 0.5f;
 			break;
-		case ACCEPT:
+		case STRONG_SUPPORT:
 			edgeWeight = 1.0f;
 			break;
-		case CHALLENGE:
+		case ATTACK:
 			edgeWeight = -0.5f;
 			break;
-		case REJECT:
+		case STRONG_ATTACK:
 			edgeWeight = -1.0f;
 			break;
 		case SUPPLEMENT:

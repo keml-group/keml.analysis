@@ -39,10 +39,10 @@ public class InformationPartAnalyser {
 				int index = getIndexOfInfo(info);
 				info.getCauses().forEach(link -> {
 					int partnerIndex = getIndexOfInfo(link.getTarget());
-					if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.ACCEPT) {
+					if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
 						countSupports[index][partnerIndex] +=1;
 					}
-					if (link.getType() == InformationLinkType.CHALLENGE || link.getType() == InformationLinkType.REJECT) {
+					if (link.getType() == InformationLinkType.ATTACK || link.getType() == InformationLinkType.STRONG_ATTACK) {
 						countAttacks[index][partnerIndex] +=1;
 					}
 					// todo analyse supplements?
