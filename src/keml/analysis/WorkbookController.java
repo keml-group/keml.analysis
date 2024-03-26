@@ -68,7 +68,7 @@ public class WorkbookController {
 		// *********** styles *******************
 		
 		CellStyle floatStyle =  wb.createCellStyle();
-	    floatStyle.setDataFormat(wb.createDataFormat().getFormat("0.##"));
+	    floatStyle.setDataFormat(wb.createDataFormat().getFormat("#,##"));
 	    
 		
 		// additional color styles:
