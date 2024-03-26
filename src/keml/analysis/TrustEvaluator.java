@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -156,24 +157,30 @@ public class TrustEvaluator {
 		return f;
 	}
 	
+	private static final DecimalFormat df = new DecimalFormat("#.##");
+	
+	private static String roundTwoDigits(Float f) {
+		return df.format(f);
+	}
+	
 	// write current values
 	public void write(String file) throws IOException {
 		String path = FilenameUtils.removeExtension(file) + "-trust.csv";
 		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(path))) {
 	        try (CSVPrinter csvPrinter = new CSVPrinter(writer, 
-	        		CSVFormat.DEFAULT.builder().setHeader("TimeStamp", "Message", "CurrentTrust", "InitialTrust").build())
+	        		CSVFormat.TDF.builder().setHeader("TimeStamp", "Message", "InitialTrust", "CurrentTrust").build())
 	        ) {
-	        	newInfos.forEach(info -> {
+	        	preKnowledge.forEach(info -> {
 					try {
-						csvPrinter.printRecord(info.getTiming(), info.getMessage(), info.getCurrentTrust(), info.getInitialTrust());
+						csvPrinter.printRecord("-1", info.getMessage(), roundTwoDigits(info.getInitialTrust()), roundTwoDigits(info.getCurrentTrust()));
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}	        		
 	        	});
-	        	preKnowledge.forEach(info -> {
+	        	newInfos.forEach(info -> {
 					try {
-						csvPrinter.printRecord("-1", info.getMessage(), info.getCurrentTrust(), info.getInitialTrust());
+						csvPrinter.printRecord(info.getTiming(), info.getMessage(), roundTwoDigits(info.getInitialTrust()), roundTwoDigits(info.getCurrentTrust()));
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
