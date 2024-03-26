@@ -23,6 +23,8 @@ public class WorkbookController {
 	CellStyle factStyle;
 	CellStyle origLLMStyle;
 	CellStyle origOtherStyle;
+	CellStyle trustStyle;
+	CellStyle distrustStyle;
 
 	public WorkbookController() {
 
@@ -62,7 +64,18 @@ public class WorkbookController {
 	    origOtherStyle.setAlignment(HorizontalAlignment.CENTER);
 	    origOtherStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
 	    origOtherStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-	
+	    
+	    // *************** Trust ****************
+	    trustStyle = wb.createCellStyle();
+	    trustStyle.setAlignment(HorizontalAlignment.CENTER);
+	    trustStyle.setFillForegroundColor(IndexedColors.GREEN.getIndex());
+	    trustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+	    
+	    // *************** Distrust *************
+	    distrustStyle = wb.createCellStyle();
+	    distrustStyle.setAlignment(HorizontalAlignment.CENTER);
+	    distrustStyle.setFillForegroundColor(IndexedColors.RED.getIndex());
+	    distrustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	}
 	
 	public void putData(List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) {
@@ -78,8 +91,8 @@ public class WorkbookController {
 			Cell msg = r.createCell(2);
 			msg.setCellValue(pre.getMessage());
 			colorByOrigin(msg, false);
-			r.createCell(3).setCellValue(pre.getInitialTrust());
-			r.createCell(4).setCellValue(pre.getCurrentTrust());		
+			setAndColorByValue(r.createCell(3),pre.getInitialTrust());
+			setAndColorByValue(r.createCell(4),pre.getCurrentTrust());		
 		}
 		for (int i=0; i< newInfos.size();i++) {
 			NewInformation info = newInfos.get(i);
@@ -91,8 +104,8 @@ public class WorkbookController {
 			Cell msg = r.createCell(2);
 			msg.setCellValue(info.getMessage());
 			colorByOrigin(msg, info.getSourceConversationPartner().getName().equals("LLM"));
-			r.createCell(3).setCellValue(info.getInitialTrust());
-			r.createCell(4).setCellValue(info.getCurrentTrust());
+			setAndColorByValue(r.createCell(3),info.getInitialTrust());
+			setAndColorByValue(r.createCell(4),info.getCurrentTrust());
 		}	
 	}
 	
@@ -112,8 +125,12 @@ public class WorkbookController {
 		}
 	}
 	
-	private void colorByValue(Cell cell, float value) {
-		
+	private void setAndColorByValue(Cell cell, float value) {
+		cell.setCellValue(value);
+		if (value > 0.0f)
+			cell.setCellStyle(trustStyle);
+		else if (value <0.0f)
+			cell.setCellStyle(distrustStyle);
 	}
 	
 	public void write(String file) throws IOException {
