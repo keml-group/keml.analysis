@@ -5,13 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,7 +57,7 @@ public class TrustEvaluator {
 		assignInitialTrust(valuePerPartner, authorValue);
 		evaluate();
 		try {
-			write(path);
+			writeToExcel(path);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -191,5 +189,13 @@ public class TrustEvaluator {
 		}
 	    System.out.println("Wrote trust analysis to " + path);		
 	}
+	
+	public void writeToExcel(String file) throws IOException {
+		
+		WorkbookController wbc = new WorkbookController();
+		wbc.putData(newInfos, preKnowledge);
+		wbc.write(file);
 
+	}
+	
 }
