@@ -19,14 +19,15 @@ public class WorkbookController {
 	Sheet sheet;
 	
 	XSSFCellStyle defaultStyle;
+	XSSFCellStyle headerStyle;
 	XSSFCellStyle floatStyle;
+	XSSFCellStyle trustStyle;
+	XSSFCellStyle distrustStyle;
+	XSSFCellStyle neutTrustStyle;
 	XSSFCellStyle instructionStyle;
 	XSSFCellStyle factStyle;
 	XSSFCellStyle origLLMStyle;
 	XSSFCellStyle origOtherStyle;
-	XSSFCellStyle trustStyle;
-	XSSFCellStyle distrustStyle;
-	XSSFCellStyle neutTrustStyle;
 
 	public WorkbookController() {
 
@@ -38,13 +39,30 @@ public class WorkbookController {
 		defaultStyle = (XSSFCellStyle) start.getCellStyle();
 		defaultStyle.setAlignment(HorizontalAlignment.CENTER);
 		
-		
-		start.setCellValue("Time");
-		headers.createCell(1).setCellValue("Message");
-		headers.createCell(2).setCellValue("InitialTrust");
-		headers.createCell(3).setCellValue("Current\nTrust");
-		headers.createCell(4).setCellValue("#Arguments");
-		headers.createCell(5).setCellValue("#Repetitions");
+		 //************* header style *****************
+	    Font headerFont = wb.createFont();
+	    headerFont.setBold(true);
+	    headerStyle = wb.createCellStyle();
+	    headerStyle.setRotation((short)90);
+	    headerStyle.setFont(headerFont);
+	    	
+		start.setCellValue("Time Stamp");
+		start.setCellStyle(headerStyle);
+		Cell i = headers.createCell(1);
+		i.setCellValue("Message");
+		i.setCellStyle(headerStyle);
+		i = headers.createCell(2);
+		i.setCellValue("Initial Trust");
+		i.setCellStyle(headerStyle);
+		i = headers.createCell(3);
+		i.setCellValue("Current Trust");
+		i.setCellStyle(headerStyle);
+		i = headers.createCell(4);
+		i.setCellValue("#Arguments");
+		i.setCellStyle(headerStyle);
+		i = headers.createCell(5);
+		i.setCellValue("#Repetitions");
+		i.setCellStyle(headerStyle);
 
 		
 		// *********** styles *******************
@@ -54,6 +72,24 @@ public class WorkbookController {
 	    
 		
 		// additional color styles:
+	    // *************** Trust ****************
+	    trustStyle = wb.createCellStyle();
+	    trustStyle.setDataFormat(floatStyle.getDataFormat());
+	    trustStyle.setAlignment(HorizontalAlignment.CENTER);
+	    trustStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#339966"), null));
+	    trustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+	    // *************** Distrust *************
+	    distrustStyle = wb.createCellStyle();
+	    trustStyle.setDataFormat(floatStyle.getDataFormat());
+	    distrustStyle.setAlignment(HorizontalAlignment.CENTER);
+	    distrustStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FF5F5F"), null));
+	    distrustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+	 // *************** neutral about trust *************
+	    neutTrustStyle = wb.createCellStyle();
+	    trustStyle.setDataFormat(floatStyle.getDataFormat());
+	    neutTrustStyle.setAlignment(HorizontalAlignment.CENTER);
+	    neutTrustStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+	    neutTrustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 		// ************** isFact *************
 	    factStyle = wb.createCellStyle();
 	    factStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -78,25 +114,6 @@ public class WorkbookController {
 	    origOtherStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FFFF99"), null));
 	    origOtherStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	    
-	    // *************** Trust ****************
-	    trustStyle = wb.createCellStyle();
-	    trustStyle.setDataFormat(floatStyle.getDataFormat());
-	    trustStyle.setAlignment(HorizontalAlignment.CENTER);
-	    trustStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#339966"), null));
-	    trustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-	    
-	    // *************** Distrust *************
-	    distrustStyle = wb.createCellStyle();
-	    trustStyle.setDataFormat(floatStyle.getDataFormat());
-	    distrustStyle.setAlignment(HorizontalAlignment.CENTER);
-	    distrustStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FF5F5F"), null));
-	    distrustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-	 // *************** neutral about trust *************
-	    neutTrustStyle = wb.createCellStyle();
-	    trustStyle.setDataFormat(floatStyle.getDataFormat());
-	    neutTrustStyle.setAlignment(HorizontalAlignment.CENTER);
-	    neutTrustStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
-	    neutTrustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	}
 	
 	public void putData(List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) {
