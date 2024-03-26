@@ -18,13 +18,15 @@ public class WorkbookController {
 	XSSFWorkbook wb;
 	Sheet sheet;
 	
-	CellStyle defaultStyle;
-	CellStyle instructionStyle;
-	CellStyle factStyle;
-	CellStyle origLLMStyle;
-	CellStyle origOtherStyle;
-	CellStyle trustStyle;
-	CellStyle distrustStyle;
+	XSSFCellStyle defaultStyle;
+	XSSFCellStyle floatStyle;
+	XSSFCellStyle instructionStyle;
+	XSSFCellStyle factStyle;
+	XSSFCellStyle origLLMStyle;
+	XSSFCellStyle origOtherStyle;
+	XSSFCellStyle trustStyle;
+	XSSFCellStyle distrustStyle;
+	XSSFCellStyle neutTrustStyle;
 
 	public WorkbookController() {
 
@@ -33,49 +35,68 @@ public class WorkbookController {
 	    Row headers = sheet.createRow(0);
 	    
 		Cell start = headers.createCell(0);
-		defaultStyle = start.getCellStyle();
-		start.setCellValue("TimeStamp");
-		headers.createCell(1).setCellValue("IsInstruction");
-		headers.createCell(2).setCellValue("Message");
-		headers.createCell(3).setCellValue("InitialTrust");
-		headers.createCell(4).setCellValue("CurrentTrust");
+		defaultStyle = (XSSFCellStyle) start.getCellStyle();
+		defaultStyle.setAlignment(HorizontalAlignment.CENTER);
+		
+		
+		start.setCellValue("Time");
+		headers.createCell(1).setCellValue("Message");
+		headers.createCell(2).setCellValue("InitialTrust");
+		headers.createCell(3).setCellValue("Current\nTrust");
+		headers.createCell(4).setCellValue("#Arguments");
+		headers.createCell(5).setCellValue("#Repetitions");
 
-		// additional styles:
+		
+		// *********** styles *******************
+		
+		CellStyle floatStyle =  wb.createCellStyle();
+	    floatStyle.setDataFormat(wb.createDataFormat().getFormat("0.##"));
+	    
+		
+		// additional color styles:
 		// ************** isFact *************
 	    factStyle = wb.createCellStyle();
 	    factStyle.setAlignment(HorizontalAlignment.CENTER);
-	    factStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+	    factStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#99CC00"), null));
 	    factStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	    
 	    // ************* is Instruction **********
 	    instructionStyle = wb.createCellStyle();
 	    instructionStyle.setAlignment(HorizontalAlignment.CENTER);
-	    instructionStyle.setFillForegroundColor(IndexedColors.LIGHT_ORANGE.getIndex());
+	    instructionStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FFCC00"), null));
 	    instructionStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	    
 	    // *************** origin LLM style**************
 	    origLLMStyle = wb.createCellStyle();
 	    origLLMStyle.setAlignment(HorizontalAlignment.CENTER);
-	    origLLMStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+	    origLLMStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#CCFFFF"), null));
 	    origLLMStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); 
 	    
 	    // *************** origin Other style**************
 	    origOtherStyle = wb.createCellStyle();
 	    origOtherStyle.setAlignment(HorizontalAlignment.CENTER);
-	    origOtherStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+	    origOtherStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FFFF99"), null));
 	    origOtherStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	    
 	    // *************** Trust ****************
 	    trustStyle = wb.createCellStyle();
+	    trustStyle.setDataFormat(floatStyle.getDataFormat());
 	    trustStyle.setAlignment(HorizontalAlignment.CENTER);
-	    trustStyle.setFillForegroundColor(IndexedColors.GREEN.getIndex());
+	    trustStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#339966"), null));
 	    trustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	    
 	    // *************** Distrust *************
 	    distrustStyle = wb.createCellStyle();
+	    trustStyle.setDataFormat(floatStyle.getDataFormat());
 	    distrustStyle.setAlignment(HorizontalAlignment.CENTER);
-	    distrustStyle.setFillForegroundColor(IndexedColors.RED.getIndex());
+	    distrustStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FF5F5F"), null));
 	    distrustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+	 // *************** neutral about trust *************
+	    neutTrustStyle = wb.createCellStyle();
+	    trustStyle.setDataFormat(floatStyle.getDataFormat());
+	    neutTrustStyle.setAlignment(HorizontalAlignment.CENTER);
+	    neutTrustStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+	    neutTrustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	}
 	
 	public void putData(List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) {
@@ -84,28 +105,30 @@ public class WorkbookController {
 		for (int i=0; i < preKnowledge.size(); i++) {
 			PreKnowledge pre = preKnowledge.get(i);
 			Row r = sheet.createRow(offset++);
-			r.createCell(0).setCellValue(-1);
-			Cell instr = r.createCell(1);
-			instr.setCellValue(pre.isIsInstruction());
-			colorByIsInstruction(instr, pre.isIsInstruction());
-			Cell msg = r.createCell(2);
+			Cell t = r.createCell(0);
+			t.setCellValue(-1);
+			colorByIsInstruction(t, pre.isIsInstruction());
+			Cell msg = r.createCell(1);
 			msg.setCellValue(pre.getMessage());
 			colorByOrigin(msg, false);
-			setAndColorByValue(r.createCell(3),pre.getInitialTrust());
-			setAndColorByValue(r.createCell(4),pre.getCurrentTrust());		
+			setAndColorByValue(r.createCell(2),pre.getInitialTrust());
+			setAndColorByValue(r.createCell(3),pre.getCurrentTrust());
+			r.createCell(4).setCellValue(pre.getTargetedBy().size());
+			r.createCell(5).setCellValue(pre.getRepeatedBy().size());
 		}
 		for (int i=0; i< newInfos.size();i++) {
 			NewInformation info = newInfos.get(i);
 			Row r = sheet.createRow(offset++);
-			r.createCell(0).setCellValue(info.getTiming());
-			Cell instr = r.createCell(1);
-			instr.setCellValue(info.isIsInstruction());
-			colorByIsInstruction(instr, info.isIsInstruction());
-			Cell msg = r.createCell(2);
+			Cell t = r.createCell(0);
+			t.setCellValue(info.getTiming());
+			colorByIsInstruction(t, info.isIsInstruction());
+			Cell msg = r.createCell(1);
 			msg.setCellValue(info.getMessage());
 			colorByOrigin(msg, info.getSourceConversationPartner().getName().equals("LLM"));
-			setAndColorByValue(r.createCell(3),info.getInitialTrust());
-			setAndColorByValue(r.createCell(4),info.getCurrentTrust());
+			setAndColorByValue(r.createCell(2),info.getInitialTrust());
+			setAndColorByValue(r.createCell(3),info.getCurrentTrust());
+			r.createCell(4).setCellValue(info.getTargetedBy().size());
+			r.createCell(5).setCellValue(info.getRepeatedBy().size());
 		}	
 	}
 	
@@ -131,6 +154,8 @@ public class WorkbookController {
 			cell.setCellStyle(trustStyle);
 		else if (value <0.0f)
 			cell.setCellStyle(distrustStyle);
+		else
+			cell.setCellStyle(neutTrustStyle);
 	}
 	
 	public void write(String file) throws IOException {
