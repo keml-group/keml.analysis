@@ -29,13 +29,17 @@ public class TrustEvaluator {
 	List<NewInformation> newInfos;
 	List<PreKnowledge> preKnowledge;
 	
+	int weight;
 	
-	public TrustEvaluator(Conversation conv) {
+	
+	public TrustEvaluator(Conversation conv, int weight) {
 		this.conv = conv;
 		this.partners = ConversationAnalyser.getPartnerNames(conv); //works as header row
 		this.receives = ConversationAnalyser.getReceives(conv);
 		this.newInfos = ConversationAnalyser.getNewInfos(receives);
 		this.preKnowledge = conv.getAuthor().getPreknowledge();
+		
+		this.weight = weight;
 	}
 	
 	public static List<Map<String, Float>> standardTrustConfigurations() {
@@ -91,7 +95,7 @@ public class TrustEvaluator {
 		wbc.write(path);
 	}
 	
-	public HashMap<Information, Pair<Float, Float>> analyse() {
+	public HashMap<Information, Pair<Float, Float>> analyseWithDefault() {
 		Float authorValue = 1.0F;
 		Map<String, Float> valuesPerPartner = new HashMap<String, Float>();
 		partners.forEach(p -> {
@@ -162,7 +166,7 @@ public class TrustEvaluator {
 	private Float currentNodeTrust(Information info) {
 		return limitTo1(info.getInitialTrust()
 			+ getRepetitionScore(info)
-			+ 2*argumentationScore(info));
+			+ weight*argumentationScore(info));
 	}
 	
 	// relies on current trust 
