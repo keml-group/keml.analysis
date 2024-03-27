@@ -1,6 +1,7 @@
 package keml.analysis;
 
 import org.apache.poi.xssf.usermodel.*;
+import org.javatuples.Pair;
 
 import keml.NewInformation;
 import keml.PreKnowledge;
@@ -9,7 +10,11 @@ import org.apache.poi.ss.usermodel.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import keml.Information;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -28,8 +33,15 @@ public class WorkbookController {
 	XSSFCellStyle factStyle;
 	XSSFCellStyle origLLMStyle;
 	XSSFCellStyle origOtherStyle;
+	
+	// data properties
+	int firstFreeColumn = 0;
+	private HashMap<Information, Integer> infoToRow;
+	
 
 	public WorkbookController() {
+		
+		infoToRow = new HashMap<>();
 
 		wb = new XSSFWorkbook();
 		sheet = wb.createSheet("Trust");
@@ -39,7 +51,7 @@ public class WorkbookController {
 		defaultStyle = (XSSFCellStyle) start.getCellStyle();
 		defaultStyle.setAlignment(HorizontalAlignment.CENTER);
 		
-		 //************* header style *****************
+		 //************* headers *****************
 	    Font headerFont = wb.createFont();
 	    headerFont.setBold(true);
 	    headerStyle = wb.createCellStyle();
@@ -52,23 +64,24 @@ public class WorkbookController {
 		i.setCellValue("Message");
 		i.setCellStyle(headerStyle);
 		i = headers.createCell(2);
-		i.setCellValue("Initial Trust");
-		i.setCellStyle(headerStyle);
-		i = headers.createCell(3);
-		i.setCellValue("Current Trust");
-		i.setCellStyle(headerStyle);
-		i = headers.createCell(4);
 		i.setCellValue("#Arguments");
 		i.setCellStyle(headerStyle);
-		i = headers.createCell(5);
+		i = headers.createCell(3);
 		i.setCellValue("#Repetitions");
 		i.setCellStyle(headerStyle);
+		i = headers.createCell(4);
+		i.setCellValue("Initial Trust");
+		i.setCellStyle(headerStyle);
+		i = headers.createCell(5);
+		i.setCellValue("Current Trust");
+		i.setCellStyle(headerStyle);
 
+		firstFreeColumn=6;
 		
 		// *********** styles *******************
 		
 		CellStyle floatStyle =  wb.createCellStyle();
-	    floatStyle.setDataFormat(wb.createDataFormat().getFormat("#,##"));
+	    //floatStyle.setDataFormat(wb.createDataFormat().getFormat("#,##"));
 	    
 		
 		// additional color styles:
@@ -116,11 +129,16 @@ public class WorkbookController {
 	    
 	}
 	
+	public void writeSingleAnalysis(String path, List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) throws IOException {
+		putData(newInfos, preKnowledge);
+		write(path);	
+	}
+	
 	public void putData(List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) {
-//		style.setWrapText(true);
 		int offset=1; // adapted in loop
 		for (int i=0; i < preKnowledge.size(); i++) {
 			PreKnowledge pre = preKnowledge.get(i);
+			infoToRow.put(pre, offset);
 			Row r = sheet.createRow(offset++);
 			Cell t = r.createCell(0);
 			t.setCellValue(-1);
@@ -128,13 +146,14 @@ public class WorkbookController {
 			Cell msg = r.createCell(1);
 			msg.setCellValue(pre.getMessage());
 			colorByOrigin(msg, false);
-			setAndColorByValue(r.createCell(2),pre.getInitialTrust());
-			setAndColorByValue(r.createCell(3),pre.getCurrentTrust());
-			r.createCell(4).setCellValue(pre.getTargetedBy().size());
-			r.createCell(5).setCellValue(pre.getRepeatedBy().size());
+			r.createCell(2).setCellValue(pre.getTargetedBy().size());
+			r.createCell(3).setCellValue(pre.getRepeatedBy().size());
+			setAndColorByValue(r.createCell(4),pre.getInitialTrust());
+			setAndColorByValue(r.createCell(5),pre.getCurrentTrust());
 		}
 		for (int i=0; i< newInfos.size();i++) {
 			NewInformation info = newInfos.get(i);
+			infoToRow.put(info, offset);
 			Row r = sheet.createRow(offset++);
 			Cell t = r.createCell(0);
 			t.setCellValue(info.getTiming());
@@ -142,11 +161,30 @@ public class WorkbookController {
 			Cell msg = r.createCell(1);
 			msg.setCellValue(info.getMessage());
 			colorByOrigin(msg, info.getSourceConversationPartner().getName().equals("LLM"));
-			setAndColorByValue(r.createCell(2),info.getInitialTrust());
-			setAndColorByValue(r.createCell(3),info.getCurrentTrust());
-			r.createCell(4).setCellValue(info.getTargetedBy().size());
-			r.createCell(5).setCellValue(info.getRepeatedBy().size());
+			r.createCell(2).setCellValue(info.getTargetedBy().size());
+			r.createCell(3).setCellValue(info.getRepeatedBy().size());
+			setAndColorByValue(r.createCell(4),info.getInitialTrust());
+			setAndColorByValue(r.createCell(5),info.getCurrentTrust());
 		}	
+	}
+	
+	public void addTrusts(HashMap<Information, Pair<Float, Float>> trusts) {
+		Row headers = sheet.getRow(0);
+		
+		Cell i = headers.createCell(firstFreeColumn);
+		i.setCellValue("Initial Trust");
+		i.setCellStyle(headerStyle);
+		i = headers.createCell(firstFreeColumn +1);
+		i.setCellValue("Current Trust");
+		i.setCellStyle(headerStyle);
+		
+		trusts.forEach((info, scores) -> {
+			int rowIndex = infoToRow.get(info);
+			Row current = sheet.getRow(rowIndex);
+			setAndColorByValue(current.createCell(firstFreeColumn), scores.getValue0());
+			setAndColorByValue(current.createCell(firstFreeColumn+1), scores.getValue1());
+		});
+		firstFreeColumn +=2;
 	}
 	
 	private void colorByIsInstruction(Cell cell, boolean isInstruction) {
