@@ -69,11 +69,11 @@ public class InformationPartAnalyser {
 	String[] headers() {
 		String[] headers = new String[dimension];
 		for (int i = 0; i< partners.size(); i++) {
-			headers[2*i] = partners.get(i) + " Facts";
-			headers[2*i+1] = partners.get(i) + " Instructions";
+			headers[2*i] = partners.get(i) + " F";
+			headers[2*i+1] = partners.get(i) + " I";
 		}
-		headers[dimension-2]= "Author Facts";
-		headers[dimension-1]= "Author Instructions";
+		headers[dimension-2]= "Author F";
+		headers[dimension-1]= "Author I";
 		return headers;
 	}
 

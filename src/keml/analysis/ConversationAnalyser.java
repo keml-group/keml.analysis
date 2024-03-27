@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.io.FilenameUtils;
 
 import keml.Conversation;
 import keml.ReceiveMessage;
@@ -50,7 +51,12 @@ public class ConversationAnalyser {
 		return receives.stream().map(m -> m.getGenerates()).flatMap(List::stream).toList();
 	}
 
-	public void createCSV(String path) throws IOException {
+	public void createCSVs(String basePath) throws IOException {
+		writeGeneralCSV(basePath + "-general.csv");
+		writeArgumentationCSV(basePath + "-arguments.csv");
+	}
+	
+	public void writeGeneralCSV(String path) throws IOException {
 		
         BufferedWriter writer = Files.newBufferedWriter(Paths.get(path));
         try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
@@ -71,10 +77,18 @@ public class ConversationAnalyser {
 			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "Instructions", csvPrinter, 0L);
 			csvPrinter.printRecord("Trust:");
 			csvPrinter.printRecord("Repetitions", countRepetitions());
-			infoAnalyser.writeInformationConnections(csvPrinter);
 			csvPrinter.flush();
 		}
-        System.out.println("Wrote analysis to " + path);
+        System.out.println("Wrote general analysis to " + path);
+	}
+	
+	public void writeArgumentationCSV(String path) throws IOException {
+		BufferedWriter writer = Files.newBufferedWriter(Paths.get(path));
+        try (CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
+			infoAnalyser.writeInformationConnections(csvPrinter);
+			csvPrinter.flush();
+        }
+        System.out.println("Wrote argumentation analysis to " + path);
 	}
 	
 	private void printPartnerHeaderRow(CSVPrinter csvPrinter) throws IOException {

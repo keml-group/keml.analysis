@@ -17,10 +17,10 @@ public class AnalysisProvider {
 		for (File file: files) {
 			try {
 				String source = file.getAbsolutePath();
-				String target = FilenameUtils.removeExtension(source) + ".csv";
+				String basePath = FilenameUtils.removeExtension(source);
 				Conversation conv = new KemlFileHandler().loadKeml(source);
-				new ConversationAnalyser(conv).createCSV(target);
-				new TrustEvaluator(conv).analyse(source);
+				new ConversationAnalyser(conv).createCSVs(basePath);
+				new TrustEvaluator(conv).analyse(basePath);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
