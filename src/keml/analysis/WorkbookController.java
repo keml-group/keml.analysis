@@ -12,7 +12,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import keml.Information;
 
@@ -56,6 +55,7 @@ public class WorkbookController {
 	    headerFont.setBold(true);
 	    headerStyle = wb.createCellStyle();
 	    headerStyle.setRotation((short)90);
+	    headerStyle.setAlignment(HorizontalAlignment.CENTER);
 	    headerStyle.setFont(headerFont);
 	    	
 		start.setCellValue("Time Stamp");
@@ -127,11 +127,6 @@ public class WorkbookController {
 	    origOtherStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FFFF99"), null));
 	    origOtherStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	    
-	}
-	
-	public void writeSingleAnalysis(String path, List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) throws IOException {
-		putData(newInfos, preKnowledge);
-		write(path);	
 	}
 	
 	public void putData(List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) {
@@ -214,6 +209,9 @@ public class WorkbookController {
 	}
 	
 	public void write(String file) throws IOException {
+		for (int i = 0; i < firstFreeColumn; i++) {
+            sheet.autoSizeColumn(i);
+        }
 		String path = FilenameUtils.removeExtension(file) + "-trust.xlsx";
 		try(FileOutputStream o = new FileOutputStream(path)) {
 			wb.write(o);

@@ -50,15 +50,15 @@ public class TrustEvaluator {
 		valuesPerPartner10.put("Browser", 1.0F);
 		res.add(valuesPerPartner10);
 		
-		Map<String, Float> valuesPerPartner1005 = new HashMap<String, Float>();
-		valuesPerPartner1005.put("LLM", 1.0F);
-		valuesPerPartner1005.put("Browser", 0.5F);
-		res.add(valuesPerPartner1005);
-		
 		Map<String, Float> valuesPerPartner0510 = new HashMap<String, Float>();
 		valuesPerPartner0510.put("LLM", 0.5F);
 		valuesPerPartner0510.put("Browser", 1.0F);
 		res.add(valuesPerPartner0510);
+				
+		Map<String, Float> valuesPerPartner1005 = new HashMap<String, Float>();
+		valuesPerPartner1005.put("LLM", 1.0F);
+		valuesPerPartner1005.put("Browser", 0.5F);
+		res.add(valuesPerPartner1005);
 		
 		Map<String, Float> valuesPerPartner05 = new HashMap<String, Float>();
 		valuesPerPartner05.put("LLM", 0.5F);

@@ -25,7 +25,7 @@ public class AnalysisProvider {
 				new ConversationAnalyser(conv).createCSVs(basePath);
 				LocaleUtil.setUserLocale(Locale.US);
 				
-				for(int i = 2; i<= 5; i++) {
+				for(int i = 2; i<= 10; i++) {
 					TrustEvaluator trusty = new TrustEvaluator(conv, i);
 					trusty.writeRowAnalysis(basePath+"-w"+i+"-", TrustEvaluator.standardTrustConfigurations(), 1.0F);
 				}
