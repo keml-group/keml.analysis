@@ -7,6 +7,8 @@ import keml.NewInformation;
 import keml.PreKnowledge;
 
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.RegionUtil;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,6 +26,7 @@ public class WorkbookController {
 	
 	XSSFCellStyle defaultStyle;
 	XSSFCellStyle headerStyle;
+	XSSFCellStyle headerMessageStyle;
 	XSSFCellStyle floatStyle;
 	XSSFCellStyle trustStyle;
 	XSSFCellStyle distrustStyle;
@@ -57,12 +60,16 @@ public class WorkbookController {
 	    headerStyle.setRotation((short)90);
 	    headerStyle.setAlignment(HorizontalAlignment.CENTER);
 	    headerStyle.setFont(headerFont);
+	    
+	    headerMessageStyle = wb.createCellStyle();
+	    headerMessageStyle.setAlignment(HorizontalAlignment.LEFT);
+	    headerMessageStyle.setFont(headerFont);
 	    	
 		start.setCellValue("Time Stamp");
 		start.setCellStyle(headerStyle);
 		Cell i = headers.createCell(1);
 		i.setCellValue("Message");
-		i.setCellStyle(headerStyle);
+		i.setCellStyle(headerMessageStyle);
 		i = headers.createCell(2);
 		i.setCellValue("#Arguments");
 		i.setCellStyle(headerStyle);
@@ -81,9 +88,8 @@ public class WorkbookController {
 		// *********** styles *******************
 		
 		CellStyle floatStyle =  wb.createCellStyle();
-	    //floatStyle.setDataFormat(wb.createDataFormat().getFormat("#,##"));
-	    
-		
+	    floatStyle.setDataFormat(wb.createDataFormat().getFormat("0.0#"));
+	
 		// additional color styles:
 	    // *************** Trust ****************
 	    trustStyle = wb.createCellStyle();
@@ -117,13 +123,13 @@ public class WorkbookController {
 	    
 	    // *************** origin LLM style**************
 	    origLLMStyle = wb.createCellStyle();
-	    origLLMStyle.setAlignment(HorizontalAlignment.CENTER);
+	    origLLMStyle.setAlignment(HorizontalAlignment.LEFT);
 	    origLLMStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#CCFFFF"), null));
 	    origLLMStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); 
 	    
 	    // *************** origin Other style**************
 	    origOtherStyle = wb.createCellStyle();
-	    origOtherStyle.setAlignment(HorizontalAlignment.CENTER);
+	    origOtherStyle.setAlignment(HorizontalAlignment.LEFT);
 	    origOtherStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FFFF99"), null));
 	    origOtherStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 	    
@@ -165,7 +171,7 @@ public class WorkbookController {
 	
 	public void addTrusts(HashMap<Information, Pair<Float, Float>> trusts) {
 		Row headers = sheet.getRow(0);
-		
+				
 		Cell i = headers.createCell(firstFreeColumn);
 		i.setCellValue("Initial Trust");
 		i.setCellStyle(headerStyle);
@@ -179,7 +185,22 @@ public class WorkbookController {
 			setAndColorByValue(current.createCell(firstFreeColumn), scores.getValue0());
 			setAndColorByValue(current.createCell(firstFreeColumn+1), scores.getValue1());
 		});
+		setBorderLeft(firstFreeColumn);
+
 		firstFreeColumn +=2;
+	}
+	
+	private void sizeColumns() {
+		for (int i = 0; i < firstFreeColumn; i++) {
+            sheet.autoSizeColumn(i);
+        }
+	}
+	
+	private void setBorderLeft(int columnIndex) {
+		//use messageMap to determine row count
+		CellRangeAddress adr = new CellRangeAddress(1, infoToRow.size(), columnIndex, columnIndex);
+		RegionUtil.setBorderLeft(BorderStyle.MEDIUM, adr, sheet);
+		RegionUtil.setLeftBorderColor(IndexedColors.WHITE.getIndex(), adr, sheet);
 	}
 	
 	private void colorByIsInstruction(Cell cell, boolean isInstruction) {
@@ -209,9 +230,7 @@ public class WorkbookController {
 	}
 	
 	public void write(String file) throws IOException {
-		for (int i = 0; i < firstFreeColumn; i++) {
-            sheet.autoSizeColumn(i);
-        }
+		sizeColumns();
 		String path = FilenameUtils.removeExtension(file) + "-trust.xlsx";
 		try(FileOutputStream o = new FileOutputStream(path)) {
 			wb.write(o);
