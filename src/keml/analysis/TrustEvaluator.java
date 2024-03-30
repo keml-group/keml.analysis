@@ -42,56 +42,50 @@ public class TrustEvaluator {
 		this.weight = weight;
 	}
 	
-	public static List<Map<String, Float>> standardTrustConfigurations() {
-		ArrayList<Map<String, Float>> res = new ArrayList<>();
+	public static List<Pair<String,Map<String, Float>>> standardTrustConfigurations() {
+		ArrayList<Pair<String,Map<String, Float>>> res = new ArrayList<>();
 		
 		Map<String, Float> valuesPerPartner10 = new HashMap<String, Float>();
 		valuesPerPartner10.put("LLM", 1.0F);
 		valuesPerPartner10.put("Browser", 1.0F);
-		res.add(valuesPerPartner10);
+		res.add(new Pair<String,Map<String, Float>>("a", valuesPerPartner10));
 		
 		Map<String, Float> valuesPerPartner0510 = new HashMap<String, Float>();
 		valuesPerPartner0510.put("LLM", 0.5F);
 		valuesPerPartner0510.put("Browser", 1.0F);
-		res.add(valuesPerPartner0510);
+		res.add(new Pair<String,Map<String, Float>>("b", valuesPerPartner0510));
 				
 		Map<String, Float> valuesPerPartner1005 = new HashMap<String, Float>();
 		valuesPerPartner1005.put("LLM", 1.0F);
 		valuesPerPartner1005.put("Browser", 0.5F);
-		res.add(valuesPerPartner1005);
+		res.add(new Pair<String,Map<String, Float>>("c", valuesPerPartner1005));
 		
 		Map<String, Float> valuesPerPartner05 = new HashMap<String, Float>();
 		valuesPerPartner05.put("LLM", 0.5F);
 		valuesPerPartner05.put("Browser", 0.5F);
-		res.add(valuesPerPartner05);
+		res.add(new Pair<String,Map<String, Float>>("d", valuesPerPartner05));
 		
 		return res;
 	}
 	
-	public void writeRowAnalysis(String path, List<Map<String, Float>> trustInPartner, Float authorValue) throws IOException {
+	public void writeRowAnalysis(String path, List<Pair<String,Map<String, Float>>> trustInPartners, Float authorValue) throws IOException {
 		
-		List<HashMap<Information, Pair<Float, Float>>> analysedTrustConfigs = new ArrayList<>();
-		
-		// we split the first case and do it last so that we can fall back to the standard procedure with just one score - will fail if none exist, though
-		Map<String, Float> finalPass = trustInPartner.removeFirst();
-		trustInPartner.forEach(trusts -> { //others in row,
-			analysedTrustConfigs.add(analyse(trusts, authorValue));
-		});
-		analyse(finalPass, authorValue);
-		
-		// now create wb from whole list
 		WorkbookController wbc = new WorkbookController();
-		wbc.putData(newInfos, preKnowledge);
-		// add all other analysis results to wb
-		analysedTrustConfigs.forEach(c -> wbc.addTrusts(c));
+		wbc.initialize(newInfos, preKnowledge);
+		
+		trustInPartners.forEach(p -> {
+			var res = analyse(p.getValue1(), authorValue);
+			wbc.addTrusts(res, p.getValue0());
+		});
 		wbc.write(path);
 	}
 	
 	public void writeSingleAnalysis(String path, Map<String, Float> trustInPartner, Float authorValue) throws IOException {
 		
-		analyse(trustInPartner, authorValue);		
+		var res = analyse(trustInPartner, authorValue);
 		WorkbookController wbc = new WorkbookController();
-		wbc.putData(newInfos, preKnowledge);
+		wbc.initialize(newInfos, preKnowledge);
+		wbc.addTrusts(res, "Trust");
 		wbc.write(path);
 	}
 	
@@ -208,14 +202,6 @@ public class TrustEvaluator {
 		if (f<-1) return -1F;
 		if (f>1) return 1F;
 		return f;
-	}
-	
-	public void writeToExcel(String file) throws IOException {
-		
-		WorkbookController wbc = new WorkbookController();
-		wbc.putData(newInfos, preKnowledge);
-		wbc.write(file);
-
 	}
 	
 }

@@ -27,6 +27,7 @@ public class WorkbookController {
 	XSSFCellStyle defaultStyle;
 	XSSFCellStyle headerStyle;
 	XSSFCellStyle headerMessageStyle;
+	XSSFCellStyle bigHeaderStyle;
 	XSSFCellStyle floatStyle;
 	XSSFCellStyle trustStyle;
 	XSSFCellStyle distrustStyle;
@@ -47,7 +48,9 @@ public class WorkbookController {
 
 		wb = new XSSFWorkbook();
 		sheet = wb.createSheet("Trust");
+		// we need two rows we might merge:
 	    Row headers = sheet.createRow(0);
+	    Row headers1 = sheet.createRow(1);
 	    
 		Cell start = headers.createCell(0);
 		defaultStyle = (XSSFCellStyle) start.getCellStyle();
@@ -64,26 +67,40 @@ public class WorkbookController {
 	    headerMessageStyle = wb.createCellStyle();
 	    headerMessageStyle.setAlignment(HorizontalAlignment.LEFT);
 	    headerMessageStyle.setFont(headerFont);
-	    	
-		start.setCellValue("Time Stamp");
+	    
+	    bigHeaderStyle = wb.createCellStyle();
+	    bigHeaderStyle.setAlignment(HorizontalAlignment.CENTER);
+	    Font bigHeaderFont = wb.createFont();
+	    bigHeaderFont.setBold(true);
+	    bigHeaderFont.setFontHeight((short) 360);
+	    bigHeaderStyle.setFont(bigHeaderFont);
+	    
+		start.setCellValue("Time");
 		start.setCellStyle(headerStyle);
+		headers1.createCell(0);
+		sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 0));
+
+		
 		Cell i = headers.createCell(1);
 		i.setCellValue("Message");
 		i.setCellStyle(headerMessageStyle);
-		i = headers.createCell(2);
-		i.setCellValue("#Arguments");
-		i.setCellStyle(headerStyle);
-		i = headers.createCell(3);
-		i.setCellValue("#Repetitions");
-		i.setCellStyle(headerStyle);
-		i = headers.createCell(4);
-		i.setCellValue("Initial Trust");
-		i.setCellStyle(headerStyle);
-		i = headers.createCell(5);
-		i.setCellValue("Current Trust");
-		i.setCellStyle(headerStyle);
+		headers1.createCell(1);
+		sheet.addMergedRegion(new CellRangeAddress(0, 1, 1, 1));
 
-		firstFreeColumn=6;
+		i = headers.createCell(2);
+		i.setCellValue("#Arg");
+		i.setCellStyle(headerStyle);
+		headers1.createCell(2);
+		sheet.addMergedRegion(new CellRangeAddress(0, 1, 2, 2));
+
+		i = headers.createCell(3);
+		i.setCellValue("#Rep");
+		i.setCellStyle(headerStyle);
+		headers1.createCell(3);
+		sheet.addMergedRegion(new CellRangeAddress(0, 1, 3, 3));
+
+
+		firstFreeColumn=4;
 		
 		// *********** styles *******************
 		
@@ -135,8 +152,8 @@ public class WorkbookController {
 	    
 	}
 	
-	public void putData(List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) {
-		int offset=1; // adapted in loop
+	public void initialize(List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) {
+		int offset=2; // adapted in loop
 		for (int i=0; i < preKnowledge.size(); i++) {
 			PreKnowledge pre = preKnowledge.get(i);
 			infoToRow.put(pre, offset);
@@ -149,8 +166,6 @@ public class WorkbookController {
 			colorByOrigin(msg, false);
 			r.createCell(2).setCellValue(pre.getTargetedBy().size());
 			r.createCell(3).setCellValue(pre.getRepeatedBy().size());
-			setAndColorByValue(r.createCell(4),pre.getInitialTrust());
-			setAndColorByValue(r.createCell(5),pre.getCurrentTrust());
 		}
 		for (int i=0; i< newInfos.size();i++) {
 			NewInformation info = newInfos.get(i);
@@ -164,20 +179,25 @@ public class WorkbookController {
 			colorByOrigin(msg, info.getSourceConversationPartner().getName().equals("LLM"));
 			r.createCell(2).setCellValue(info.getTargetedBy().size());
 			r.createCell(3).setCellValue(info.getRepeatedBy().size());
-			setAndColorByValue(r.createCell(4),info.getInitialTrust());
-			setAndColorByValue(r.createCell(5),info.getCurrentTrust());
 		}	
 	}
 	
-	public void addTrusts(HashMap<Information, Pair<Float, Float>> trusts) {
-		Row headers = sheet.getRow(0);
+	public void addTrusts(HashMap<Information, Pair<Float, Float>> trusts, String name) {
+		Row headers0 = sheet.getRow(0);
+		Cell i = headers0.createCell(firstFreeColumn);
+		i.setCellValue(name);
+		i.setCellStyle(bigHeaderStyle);
+		i = headers0.createCell(firstFreeColumn+1);
+		sheet.addMergedRegion(new CellRangeAddress(0, 0, firstFreeColumn, firstFreeColumn+1));
+		
+		Row headers = sheet.getRow(1);
 				
-		Cell i = headers.createCell(firstFreeColumn);
-		i.setCellValue("Initial Trust");
-		i.setCellStyle(headerStyle);
+		i = headers.createCell(firstFreeColumn);
+		i.setCellValue("iT");
+		i.setCellStyle(headerMessageStyle);
 		i = headers.createCell(firstFreeColumn +1);
-		i.setCellValue("Current Trust");
-		i.setCellStyle(headerStyle);
+		i.setCellValue("T");
+		i.setCellStyle(headerMessageStyle);
 		
 		trusts.forEach((info, scores) -> {
 			int rowIndex = infoToRow.get(info);
@@ -197,8 +217,11 @@ public class WorkbookController {
 	}
 	
 	private void setBorderLeft(int columnIndex) {
+		CellRangeAddress hdr = new CellRangeAddress(0, 2, columnIndex, columnIndex);
+		RegionUtil.setBorderLeft(BorderStyle.MEDIUM, hdr, sheet);
+		RegionUtil.setLeftBorderColor(IndexedColors.BLACK.getIndex(), hdr, sheet);
 		//use messageMap to determine row count
-		CellRangeAddress adr = new CellRangeAddress(1, infoToRow.size(), columnIndex, columnIndex);
+		CellRangeAddress adr = new CellRangeAddress(2, infoToRow.size()+1, columnIndex, columnIndex);
 		RegionUtil.setBorderLeft(BorderStyle.MEDIUM, adr, sheet);
 		RegionUtil.setLeftBorderColor(IndexedColors.WHITE.getIndex(), adr, sheet);
 	}
@@ -236,7 +259,6 @@ public class WorkbookController {
 			wb.write(o);
 			wb.close();
 		}
-
 	}
 
 }
