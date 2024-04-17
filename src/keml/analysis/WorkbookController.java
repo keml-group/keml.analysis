@@ -62,16 +62,16 @@ public class WorkbookController {
 	    headerStyle = wb.createCellStyle();
 	    headerStyle.setRotation((short)90);
 	    headerStyle.setAlignment(HorizontalAlignment.CENTER);
-	    headerStyle.setFont(headerFont);
+	    //headerStyle.setFont(headerFont);
 	    
 	    headerMessageStyle = wb.createCellStyle();
 	    headerMessageStyle.setAlignment(HorizontalAlignment.LEFT);
-	    headerMessageStyle.setFont(headerFont);
+	    //headerMessageStyle.setFont(headerFont);
 	    
 	    bigHeaderStyle = wb.createCellStyle();
 	    bigHeaderStyle.setAlignment(HorizontalAlignment.CENTER);
 	    Font bigHeaderFont = wb.createFont();
-	    bigHeaderFont.setBold(true);
+	    //bigHeaderFont.setBold(true);
 	    bigHeaderFont.setFontHeight((short) 360);
 	    bigHeaderStyle.setFont(bigHeaderFont);
 	    
