@@ -10,18 +10,35 @@ import keml.io.KemlFileHandler;
 
 import org.apache.poi.util.LocaleUtil;
 
+ 
+
 public class AnalysisProvider {
 
 	public static void main(String[] args) throws Exception {
 		
-		String folder = "../../graphs/";		
-		File[] files = new File(folder).listFiles((dir, name) -> name.toLowerCase().endsWith(".keml"));
+		String folder;
+		if (args.length == 0) {
+			folder = "../keml.sample/case-study-log4j/2024-03-30-paperversion";
+		} else {
+			folder = args[0];			
+		}
+		
+		File sourceFolder = new File(folder + "/keml/");
+		File targetFolder = new File(folder+ "/analysis/");
+
+		System.out.println("You started the KEML analysis.\n I will read KEML files from " + folder 
+				+ ".\n I will write the resulting files into " + targetFolder);
+
+		
+		File[] files = sourceFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".keml"));
 		
 		for (File file: files) {
 			try {
 				String source = file.getAbsolutePath();
-				String basePath = FilenameUtils.removeExtension(source);
 				Conversation conv = new KemlFileHandler().loadKeml(source);
+				
+				String basePath = targetFolder +"/" + FilenameUtils.removeExtension(file.getName());
+
 				new ConversationAnalyser(conv).createCSVs(basePath);
 				LocaleUtil.setUserLocale(Locale.US);
 				
