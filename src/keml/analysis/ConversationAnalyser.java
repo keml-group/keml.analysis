@@ -65,7 +65,7 @@ public class ConversationAnalyser {
 			writeMessageCounts(csvPrinter);		
 			csvPrinter.printRecord();		
 			csvPrinter.printRecord("KnowledgePart");
-			csvPrinter.printRecord("Preknowledge", conv.getAuthor().getPreknowledge().size());
+			writePreKnowledge(csvPrinter);
 			csvPrinter.print("New Information");
 			csvPrinter.printRecord(partners);
 			HashMap<InformationType, Map<String, Long>> newInfos = countNewInformationByPartner();
@@ -80,6 +80,14 @@ public class ConversationAnalyser {
 			csvPrinter.flush();
 		}
         System.out.println("Wrote general analysis to " + path);
+	}
+	
+	private void writePreKnowledge(CSVPrinter csvPrinter) throws IOException {
+		int all = conv.getAuthor().getPreknowledge().size();
+		long instructions = conv.getAuthor().getPreknowledge().stream().filter(p -> p.isIsInstruction()).count();
+		csvPrinter.printRecord("Preknowledge:", all);
+		csvPrinter.printRecord("Facts", all - instructions);
+		csvPrinter.printRecord("Instructions", instructions);
 	}
 	
 	public void writeArgumentationCSV(String path) throws IOException {
