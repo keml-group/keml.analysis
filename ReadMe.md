@@ -31,15 +31,24 @@ This CSV file holds a Message Part and a Knowledge Part where it gives statistic
 The Message Part gives counts for sends and receives, as well as interruptions.
 The Knowledge Part counts PreKnowledge and New information, split into Facts and Instructions. It also counts repetitions.
 
+![Example General Statistics](doc/example-general-csv.png)
+
+
 ### Argumentation Statistics
 Argumentation statistics are stored under _pre_-arguments.csv.
 
-This CSV file consists of a table that counts attacks and supports between facts and instructions of all conversation partners. 
+This CSV file consists of a table that counts attacks and supports between facts (F) and instructions (I) of all conversation partners (including the human author).
+
+![Example Argumentation Statistics](doc/example-arguments-csv.png)
 
 ### Trust Scores
 
 Trust Scores are given as Excel (xlsx) files _pre_-w _n_--arguments.csv where _n_ is the weight of the trust computation formula.
 Each file depicts four scenarios described under [Initial Trust](#initial-trust).
+Each scenario consists of two columns, one that lists the initial trust score for each information and one that lists the (final) trust score.
+
+![Example Trust Scores](doc/example-trust-xlsx.png)
+
 
 #### Trust computation formula
 **Trust T** into an **information i** is computed based on **initial trust $T_{init}$** by combining it with a **repetition score $T_{rep}$** and an **argumentative trust $T_{arg}$**:
@@ -68,7 +77,7 @@ Here, $infl(j,i)$ is defined by the type of edge $j$->$i$ as -1, -0.5, 0.5, 1 fo
 
 #### Initial Trust
 
-The initial trust into an information _i_ could be assigned individually to each information. In our analysis module, it is currently evaluated in **four scenarios** that distinguish between the LLM _LLM_ and all other conversation partners _P_:
+The initial trust into an information _i_ could be assigned individually to each information. In this analysis module, it is currently evaluated in **four scenarios** that distinguish between the LLM _LLM_ and all other conversation partners _P_:
 
 - a) trust all completely ($T_{init}(P) = 1$; $T_{init}(LLM)=1$)
 - b) trust the LLM less ($T_{init}(P) = 1$; $T_{init}(LLM)=0.5$)
