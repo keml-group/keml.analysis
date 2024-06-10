@@ -44,8 +44,13 @@ This CSV file consists of a table that counts attacks and supports between facts
 ### Trust Scores
 
 Trust Scores are given as Excel (xlsx) files _pre_-w _n_--arguments.csv where _n_ is the weight of the trust computation formula.
-Each file depicts four scenarios described under [Initial Trust](#initial-trust).
-Each scenario consists of two columns, one that lists the initial trust score for each information and one that lists the (final) trust score.
+Each file depicts four scenarios (a-d) described under [Initial Trust](#initial-trust).
+Each scenario consists of two columns, one (iT) that lists the initial trust score for each information and one (T) that lists the (final) trust score.
+Additionally, there are columns to describe the information i precisely:
+1) The **time stamp** (-1 for pre knowledge) with the background color stating whether i is fact (green) or instruction (orange)
+2) The **message** column with the background color blue for LLM messages and yellow for all other messages
+3) The **argument count \#Arg** counting how many other information influence i directly
+4) The **repetition count \#Rep** counting the number of repetitions of i
 
 ![Example Trust Scores](doc/example-trust-xlsx.png)
 
