@@ -25,6 +25,7 @@ import keml.NewInformation;
 public class ConversationAnalyser {
 	
 	Conversation conv;
+	static String auth = "Author";
 	List<String> partners; //works as headers
 	List<ReceiveMessage> receives;  //starting point for work on knowledge part
 	InformationPartAnalyser infoAnalyser;
@@ -64,30 +65,24 @@ public class ConversationAnalyser {
 			printPartnerHeaderRow(csvPrinter);
 			writeMessageCounts(csvPrinter);		
 			csvPrinter.printRecord();		
+			
 			csvPrinter.printRecord("KnowledgePart");
-			writePreKnowledge(csvPrinter);
-			csvPrinter.print("New Information");
-			csvPrinter.printRecord(partners);
-			HashMap<InformationType, Map<String, Long>> newInfos = countNewInformationByPartner();
+			csvPrinter.print("Information");
+			ArrayList<String> headers = new ArrayList<String>(partners);
+			headers.add("Author");
+			csvPrinter.printRecord(headers);
+			HashMap<InformationType, Map<String, Long>> newInfos = countInformationByPartner();
 			//Long allNew = newInfos.get(InformationType.OVERALL).values().stream().collect(Collectors.reducing(0L, (x, y) -> Long.sum(x, y)));
 			//csvPrinter.printRecord("NewInformation", allNew);
 			//printPartnerHeaderRow(csvPrinter);			
-			//writeForPartners(newInfos.get(InformationType.OVERALL), "all", csvPrinter, 0L);
-			writeForPartners(newInfos.get(InformationType.FACT), "Facts", csvPrinter, 0L);
-			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "Instructions", csvPrinter, 0L);
-			csvPrinter.printRecord("Trust:");
+			//writeForPartners(newInfos.get(InformationType.OVERALL), "All", csvPrinter, 0L);
+			writeForPartners(newInfos.get(InformationType.FACT), "Facts", csvPrinter, 0L, true);
+			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "Instructions", csvPrinter, 0L, true);
+			//csvPrinter.printRecord("Trust:");
 			csvPrinter.printRecord("Repetitions", countRepetitions());
 			csvPrinter.flush();
 		}
         System.out.println("Wrote general analysis to " + path);
-	}
-	
-	private void writePreKnowledge(CSVPrinter csvPrinter) throws IOException {
-		int all = conv.getAuthor().getPreknowledge().size();
-		long instructions = conv.getAuthor().getPreknowledge().stream().filter(p -> p.isIsInstruction()).count();
-		csvPrinter.printRecord("Preknowledge:", all);
-		csvPrinter.printRecord("Facts", all - instructions);
-		csvPrinter.printRecord("Instructions", instructions);
 	}
 	
 	public void writeArgumentationCSV(String path) throws IOException {
@@ -108,7 +103,7 @@ public class ConversationAnalyser {
 		INSTRUCTION, FACT, OVERALL;
 	}
 	
-	private HashMap<InformationType, Map<String, Long>> countNewInformationByPartner() {
+	private HashMap<InformationType, Map<String, Long>> countInformationByPartner() {
 		List<String> instructions = new ArrayList<String>();
 		List<String> facts = new ArrayList<String>();
 		List<String> overall = new ArrayList<String>(); //could be computed from the other two if we ever ran into memory issues
@@ -122,11 +117,24 @@ public class ConversationAnalyser {
 				else
 					facts.add(partner);
 			});
-		});	
+		});
+		
+		Map<String, Long> factsMap = countFromStringStream(facts.stream());
+		Map<String, Long> instrMap = countFromStringStream(instructions.stream());
+		Map<String, Long> overallMap = countFromStringStream(overall.stream());
+		
+		// *** add preknowledge (as Author) ***
+		long allPre = conv.getAuthor().getPreknowledge().size();
+		long instructionsPre = conv.getAuthor().getPreknowledge().stream().filter(p -> p.isIsInstruction()).count();
+		factsMap.put(auth, allPre - instructionsPre);
+		instrMap.put(auth, instructionsPre);
+		overallMap.put(auth, allPre);
+		
+		// ** combine Maps **
 		HashMap<InformationType, Map<String, Long>> res = new HashMap<InformationType, Map<String, Long>>();
-		res.put(InformationType.INSTRUCTION, countFromStringStream(instructions.stream()));
-		res.put(InformationType.FACT, countFromStringStream(facts.stream()));
-		res.put(InformationType.OVERALL, countFromStringStream(overall.stream()));
+		res.put(InformationType.FACT, factsMap);
+		res.put(InformationType.INSTRUCTION, instrMap);
+		res.put(InformationType.OVERALL, overallMap);
 		return res;	
 	}
 	
@@ -147,9 +155,9 @@ public class ConversationAnalyser {
 				})
 				.toList()
 			);
-		writeForPartners(sent, "SendMsg", csvPrinter, 0L);
-		writeForPartners(receive, "ReceiveMsg", csvPrinter, 0L);
-		writeForPartners(interrupted, "Interrupted", csvPrinter, 0L);
+		writeForPartners(sent, "SendMsg", csvPrinter, 0L, false);
+		writeForPartners(receive, "ReceiveMsg", csvPrinter, 0L, false);
+		writeForPartners(interrupted, "Interrupted", csvPrinter, 0L, false);
 	}
 	
 	private static Map<String, Long> countByName(List<MessageExecution> msgs) {
@@ -162,7 +170,7 @@ public class ConversationAnalyser {
 	}
 	
 	// write according to header line partners into line
-	private <T> void writeForPartners(Map<String, T> content, String firstColumn, CSVPrinter csvPrinter, T defaultValue) throws IOException {
+	private <T> void writeForPartners(Map<String, T> content, String firstColumn, CSVPrinter csvPrinter, T defaultValue, boolean withAuthor) throws IOException {
 		csvPrinter.print(firstColumn );
 		partners.forEach(p -> {
 			try {
@@ -172,6 +180,9 @@ public class ConversationAnalyser {
 				e.printStackTrace();
 			}		
 		});
+		if (withAuthor) {
+			csvPrinter.print(content.getOrDefault(auth, defaultValue));
+		}
 		csvPrinter.printRecord();
 	}
 
