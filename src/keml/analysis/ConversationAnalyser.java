@@ -19,7 +19,7 @@ import org.apache.commons.io.FilenameUtils;
 import keml.Conversation;
 import keml.ReceiveMessage;
 import keml.SendMessage;
-import keml.MessageExecution;
+import keml.Message;
 import keml.NewInformation;
 
 public class ConversationAnalyser {
@@ -42,7 +42,7 @@ public class ConversationAnalyser {
 	}
 	
 	public static List<ReceiveMessage> getReceives(Conversation conv) {
-		return conv.getAuthor().getMessageExecutions().stream()
+		return conv.getAuthor().getMessages().stream()
 				.filter(m -> m instanceof ReceiveMessage).map(ms -> {
 					return (ReceiveMessage) ms;
 				}).toList();
@@ -143,7 +143,7 @@ public class ConversationAnalyser {
 	}
 	
 	private void writeMessageCounts(CSVPrinter csvPrinter) throws IOException {
-		Map<Boolean, List<MessageExecution>> isSend = conv.getAuthor().getMessageExecutions().stream()
+		Map<Boolean, List<Message>> isSend = conv.getAuthor().getMessages().stream()
 				.collect(Collectors.partitioningBy( m -> m instanceof SendMessage));	
 		var sent = countByName(isSend.get(true));
 		var receive = countByName(isSend.get(false));
@@ -160,7 +160,7 @@ public class ConversationAnalyser {
 		writeForPartners(interrupted, "Interrupted", csvPrinter, 0L, false);
 	}
 	
-	private static Map<String, Long> countByName(List<MessageExecution> msgs) {
+	private static Map<String, Long> countByName(List<Message> msgs) {
 		return msgs.stream()
 		  .collect(Collectors.groupingBy(s -> s.getCounterPart().getName(), Collectors.counting()));
 	}
