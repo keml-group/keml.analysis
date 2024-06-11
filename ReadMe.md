@@ -31,7 +31,7 @@ This CSV file holds a Message Part and a Knowledge Part where it gives statistic
 The Message Part gives counts for sends and receives, as well as interruptions.
 The Knowledge Part counts PreKnowledge and New information, split into Facts and Instructions. It also counts repetitions.
 
-![Example General Statistics](doc/example-general-csv.png)
+![Example General Statistics](doc/example-general-csv-2.png)
 
 
 ### Argumentation Statistics
