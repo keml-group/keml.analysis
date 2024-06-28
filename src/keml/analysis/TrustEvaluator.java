@@ -10,9 +10,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.eclipse.emf.common.util.EList;
 import org.javatuples.Pair;
 
 import keml.Conversation;
+import keml.ConversationPartner;
 import keml.Information;
 import keml.InformationLink;
 import keml.NewInformation;
@@ -42,29 +44,32 @@ public class TrustEvaluator {
 		this.weight = weight;
 	}
 	
-	public static List<Pair<String,Map<String, Float>>> standardTrustConfigurations() {
+	public static List<Pair<String,Map<String, Float>>> standardTrustConfigurations(EList<ConversationPartner> convoPartners) {
 		ArrayList<Pair<String,Map<String, Float>>> res = new ArrayList<>();
-		
-		Map<String, Float> valuesPerPartner10 = new HashMap<String, Float>();
-		valuesPerPartner10.put("LLM", 1.0F);
-		valuesPerPartner10.put("Browser", 1.0F);
+
+		Map<String, Float> valuesPerPartner10 = new HashMap<String, Float>(); // LLM && other 1.0
+		Map<String, Float> valuesPerPartner0510 = new HashMap<String, Float>(); // LLM 0.5 | other 1.0
+		Map<String, Float> valuesPerPartner1005 = new HashMap<String, Float>(); // LLM 1.0 | other 0.5
+		Map<String, Float> valuesPerPartner05 = new HashMap<String, Float>(); // LLM && other 0.5
+
+		for (ConversationPartner cp : convoPartners) {
+			valuesPerPartner10.put(cp.getName(), 1.0F);
+			valuesPerPartner05.put(cp.getName(), 0.5F);
+
+			if (cp.getName().equals("LLM")) {
+				valuesPerPartner0510.put("LLM", 0.5F);
+				valuesPerPartner1005.put("LLM", 1.0F);
+			} else {
+				valuesPerPartner0510.put(cp.getName(), 1.0F);
+				valuesPerPartner1005.put(cp.getName(), 0.5F);
+			}
+		}
+
 		res.add(new Pair<String,Map<String, Float>>("a", valuesPerPartner10));
-		
-		Map<String, Float> valuesPerPartner0510 = new HashMap<String, Float>();
-		valuesPerPartner0510.put("LLM", 0.5F);
-		valuesPerPartner0510.put("Browser", 1.0F);
 		res.add(new Pair<String,Map<String, Float>>("b", valuesPerPartner0510));
-				
-		Map<String, Float> valuesPerPartner1005 = new HashMap<String, Float>();
-		valuesPerPartner1005.put("LLM", 1.0F);
-		valuesPerPartner1005.put("Browser", 0.5F);
 		res.add(new Pair<String,Map<String, Float>>("c", valuesPerPartner1005));
-		
-		Map<String, Float> valuesPerPartner05 = new HashMap<String, Float>();
-		valuesPerPartner05.put("LLM", 0.5F);
-		valuesPerPartner05.put("Browser", 0.5F);
 		res.add(new Pair<String,Map<String, Float>>("d", valuesPerPartner05));
-		
+
 		return res;
 	}
 	

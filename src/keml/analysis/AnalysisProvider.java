@@ -26,6 +26,10 @@ public class AnalysisProvider {
 		File sourceFolder = new File(folder + "/keml/");
 		File targetFolder = new File(folder+ "/analysis/");
 
+		// if directory contains .keml but no ../analysis/
+		if (sourceFolder.exists() && !targetFolder.exists())
+			targetFolder.mkdirs();
+
 		System.out.println("You started the KEML analysis.\n I will read KEML files from " + folder 
 				+ ".\n I will write the resulting files into " + targetFolder);
 
@@ -44,7 +48,10 @@ public class AnalysisProvider {
 				
 				for(int i = 2; i<= 10; i++) {
 					TrustEvaluator trusty = new TrustEvaluator(conv, i);
-					trusty.writeRowAnalysis(basePath+"-w"+i+"-", TrustEvaluator.standardTrustConfigurations(), 1.0F);
+					trusty.writeRowAnalysis(
+							basePath+"-w"+i+"-",
+							TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()),
+							1.0F);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
