@@ -89,8 +89,8 @@ The initial trust into an information _i_ could be assigned individually to each
 - c) trust the LLM more than others ($T_{init}(P) = 0.5$; $T_{init}(LLM)=1$)
 - d) limit trust into all ($T_{init}(P) = 0.5$; $T_{init}(LLM)=0.5$)
 
-We write $T_{init}(P)$ for $\{T_{init}(i) | i$ from $p \in P \}$ and $T_{init}(LLM)$ for $\{T_{init}(i) | i$ from $LLM \}$.
+We write $T_{init}(P)$ for { $T_{init}(i) | i$ from $p \in P$} and $T_{init}(LLM)$ for { $T_{init}(i) | i$ from $LLM$}.
 
 
 ## License
-The license of this project is that of the [group](https://gitlab.uni-koblenz.de/keml).
+The license of this project is that of the [group](https://github.com/keml-group).
