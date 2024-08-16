@@ -13,7 +13,7 @@ If you freshly added maven to this project in Eclipse, it might be necessary to 
 ## Running
 
 This project is a basic maven based java application you can run in all normal ways (command line, IDE...).
-It has one optional input: the base folder. If none is given, it creates statistics on the complete example from keml.sample - assuming that project is located on the same level as keml.sample.
+It has one optional input: the base folder. If none is given, it creates statistics on the introductory example from keml.sample - assuming that project is located on the same level as keml.sample.
 All output files are stored in the folder **analysis**.
 
 ## Output
