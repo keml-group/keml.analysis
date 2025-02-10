@@ -43,16 +43,18 @@ public class AnalysisProvider {
 				
 				String basePath = targetFolder +"/" + FilenameUtils.removeExtension(file.getName());
 
-				new ConversationAnalyser(conv).createCSVs(basePath);
-				LocaleUtil.setUserLocale(Locale.US);
-				
-				for(int i = 2; i<= 10; i++) {
-					TrustEvaluator trusty = new TrustEvaluator(conv, i);
-					trusty.writeRowAnalysis(
-							basePath+"-w"+i+"-",
-							TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()),
-							1.0F);
-				}
+				ArgumentationStructurer as = new ArgumentationStructurer(conv);
+//				as.debug();
+//				new ConversationAnalyser(conv).createCSVs(basePath);
+//				LocaleUtil.setUserLocale(Locale.US);
+//				
+//				for(int i = 2; i<= 10; i++) {
+//					TrustEvaluator trusty = new TrustEvaluator(conv, i);
+//					trusty.writeRowAnalysis(
+//							basePath+"-w"+i+"-",
+//							TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()),
+//							1.0F);
+//				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
