@@ -23,7 +23,8 @@ import keml.ReceiveMessage;
 
 // takes a conversation and prepares it for trust analysis, each analysis modifies initial and current trust scores
 public class TrustEvaluator {
-	// +1 is absolute trust, -1 is absolute distrust, 0 is ignore - no knowledge about that node
+	// +1 is absolute trust, -1 is absolute distrust, 0 is ignore - no knowledge
+	// about that node
 
 	Conversation conv;
 	List<String> partners;
