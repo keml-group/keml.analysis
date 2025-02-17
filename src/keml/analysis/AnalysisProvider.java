@@ -13,14 +13,24 @@ public class AnalysisProvider {
 
 	public static void main(String[] args) throws Exception {
 
-		String folder;
-		if (args.length == 0) {
-			folder = "../keml.sample/introductoryExamples";
-		} else {
-			folder = args[0];
+		String folder = "../../OrgPäd/Dialoge";
+		File parentFolder = new File(folder);
+		
+		File[] srcFolders = parentFolder.listFiles((dir, name) -> dir.isDirectory());
+		for (File src :  srcFolders) {
+			System.out.println(src.getName());
+			try {
+				AnalysisProvider.analyseOneFolder(src);				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}	
 		}
 
-		File sourceFolder = new File(folder + "/keml/");
+	}
+	
+	public static void analyseOneFolder(File sourceFolder) {
+		String folder = sourceFolder.getPath();
+		//File sourceFolder = new File(folder);
 		File targetFolder = new File(folder + "/analysis/");
 
 		// if directory contains .keml but no ../analysis/
@@ -31,21 +41,15 @@ public class AnalysisProvider {
 		System.out.println("You started the KEML analysis.\n I will read KEML files from " + folder
 				+ ".\n I will write the resulting files into " + targetFolder);
 
-		File[] files;
-		if (args.length == 0) {
-			files = sourceFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".keml"));
-		} else {
-			files = sourceFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
-		}
+		File[] files = sourceFolder.listFiles((dir, name) -> name.toLowerCase().endsWith("keml.json"));
+		
 		for (File file : files) {
 			try {
 				String source = file.getAbsolutePath();
 				Conversation conv;
-				if (args.length == 0) {
-					conv = new KemlFileHandler().loadKeml(source);
-				} else {
-					conv = new KemlFileHandler().loadKemlJSON(source);
-				}
+				
+				conv = new KemlFileHandler().loadKemlJSON(source);
+				
 				String basePath = targetFolder + "/" + FilenameUtils.removeExtension(file.getName());
 
 				new ConversationAnalyser(conv).createCSVs(basePath);
