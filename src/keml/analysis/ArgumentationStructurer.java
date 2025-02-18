@@ -1,31 +1,35 @@
 package keml.analysis;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+
 import keml.Conversation;
 import keml.Information;
-import keml.InformationLink;
-import keml.InformationLinkType;
-import keml.Junction;
 import keml.Literal;
 import keml.LogicExpression;
 import keml.NewInformation;
 import keml.PreKnowledge;
 import keml.ReceiveMessage;
 
-public class ArgumentationStructurer {
-	
-	
 
-	// TODO redo the diagnosis conversation with a more conservative, logical use of junctions
+
+
+public class ArgumentationStructurer {
+
+	
+	
+	// TODO we don't handle cycles in the model yet (e.g., a => not b, b => not a), which breaks analysis
+	// TODO analysis output: All arguments, undercut trees, rebuttals, Cat and Accu values
+	// TODO validate SNegated_Implication with use case
+	// 
+	
 	
 	Conversation conv;
 	List<String> partners;
@@ -34,9 +38,12 @@ public class ArgumentationStructurer {
 	List<PreKnowledge> preKnowledge;
 	HashSet<Information> allInfo;
 	
-	List<Information> infoList;
-	Map<Information, List<Literal>> info2Literal = new HashMap<>();
-	Map<Literal, List<LogicExpression>> logicArguments = new HashMap<>();
+//	Map<Literal, List<LogicExpression>> logicArguments = new HashMap<>();
+	Map<LogicArgument, ArgumentTree> undercutTrees = new HashMap<>();
+	Map<Literal, List<LogicArgument>> rebuttals = new HashMap<>();
+	
+	Map<Literal, List<LogicArgument>> logicArguments = new HashMap<>();
+	Map<Literal, String> literals2String = new LinkedHashMap<>();
 
 	
 	
@@ -48,208 +55,138 @@ public class ArgumentationStructurer {
 		this.preKnowledge = conv.getAuthor().getPreknowledge();
 		this.allInfo  = Stream.concat(preKnowledge.stream(), newInfos.stream()).collect(Collectors.toCollection(HashSet::new));
 		
-		infoList = new ArrayList<>(allInfo);
+		mapLiteralsToStrings();
+		buildLogicArguments();
+		undercutTrees = LogicUtilities.createUndercutTreesMap(logicArguments);
+		rebuttals = LogicUtilities.createRebuttalsMap(logicArguments);
 		keml2Logic();
 	}
 	
-	
 
-	
-	public void findLogicExpressions() {
-		//find information literals
+//	
+	public void buildLogicArguments() {
+
+			
 		for (Information i : allInfo) {
 			for (Literal l : i.getAsLiteral()) {
-				List<LogicExpression> premises = new ArrayList<>();
-				for (LogicExpression le : l.getPremises()) 
-					premises.add(le);
+				List<LogicArgument> args = new ArrayList<>(); 
 				
-				logicArguments.put(l, premises);
+//				// Preknowledge asserts itself as axiom
+//				if (i instanceof PreKnowledge && !l.isNegated()) {
+//					LogicArgument newArg = new LogicArgument(l);
+//					newArg.addPremise(l);
+//					args.add(newArg);
+//				}
+				
+				for (LogicExpression le : l.getPremises()) {
+					LogicArgument newArg = new LogicArgument(l);
+					newArg.addPremise(le);
+					args.add(newArg);
+				}
+	
+				logicArguments.put(l, args);
 			}
 		}
 		
+	}
+	
+
+	public void mapLiteralsToStrings() {
+		String symbol = "L";
+		int i = 0;
+		for (Information inf : allInfo) {
+			for (Literal l : inf.getAsLiteral()) 
+				literals2String.put(l, (l.isNegated() ? "!" : "") + symbol + i);
+			i++;
+		}
+			
 	}
 	
 	public void keml2Logic() {
-		findLogicExpressions();
+
+		
 		debugInfos();
-//		debugArguments();
-		debugAttacks();
+		debugArguments();
+//		printUndercuts();
+//		printRebuttals();
+		testAccumulator();
+//		testCat();
+//		testAccu();
+		
+		
 //		debugCatNAccu();
+
 	}
-	
 	
 
-	
-	public List<Literal> findUndercuts(Literal l) {
-		List<Literal> result = new ArrayList<>();
-		List<LogicExpression> premises = logicArguments.get(l);
-		Literal counterLiteral;
-		
-		for (LogicExpression premise : premises) {
-			if (premise instanceof Literal) {
-				counterLiteral = findCounterLiteral((Literal) premise);
-				if (!logicArguments.get(counterLiteral).isEmpty()) // if counter literal has premises
-					result.add(counterLiteral);
-				
-			} else {
-				for (LogicExpression junctionContent : ((Junction) premise).getContent()) {
-					counterLiteral = findCounterLiteral((Literal) junctionContent); 
-					if (!logicArguments.get(counterLiteral).isEmpty()) // if counter literal has premises
-						result.add(counterLiteral);
-				}
-			}
-		}
-		
-		return result;
-	}
-	
-	public double hCategorizer(Literal claim) {
-		List<Literal> undercuts = findUndercuts(claim);
-		if (undercuts.isEmpty())
-			return 1.0;
-		double sum = 1.0;
-		for (Literal l : undercuts) {
-			sum += hCategorizer(l);
-		}
-		
-		return 1/(sum);
-	}
-	
-	public double logAccumulator(List<Double> forCategorizations, List<Double>againstCategorizations) {
-		double forSum = 1;
-		double againstSum = 1;
-		double result = 0;
-		for (double value : forCategorizations) {
-			forSum += value;
-		}
-		
-		for (double value : againstCategorizations) {
-			againstSum += value;
-		}
-		result += Math.log(forSum);
-		result -= Math.log(againstSum);
-		
-		return result;
-		
-	}
-	
-	public Literal findCounterLiteral(Literal l) {
-		//return the negation of this literal, if it exists
-		Information sourceInfo = l.getSource();
-		
-		if (l.isNegated())
-			return sourceInfo.getAsLiteral().get(0);
-		else 
-			return sourceInfo.getAsLiteral().get(1);
-	}
-	
-	public List<Literal> findRebuttals(Literal l) {
-		List<Literal> result = new ArrayList<>();
-
-		Literal counterLiteral = findCounterLiteral(l);
-		if (!logicArguments.get(counterLiteral).isEmpty())
-			result.add(counterLiteral);
-		
-		return result;
-		
-		
-	}
-	
-	
 	public void debugInfos() {
-		for (int i = 0; i < infoList.size(); i++) { 
-			System.out.println(i + " : " + infoList.get(i).getMessage());
-			
-		}
-	}
 
-	
-	public void debugAttacks() {
-		for (Literal l : logicArguments.keySet()) {
-//			System.out.println(debugSingleLiteral(l));
-			System.out.println("Finding undercuts for " + debugSingleLiteral(l));
-			List<Literal> undercuts = findUndercuts(l);
-
-			for (Literal undercut : undercuts) {
-				System.out.println(debugSingleLiteral(undercut));
-			}
-			System.out.println("Finding rebuttals for " + debugSingleLiteral(l));
-			List<Literal> rebuttals = findRebuttals(l);
-			for (Literal rebuttal : rebuttals) {
-				System.out.println(debugSingleLiteral(rebuttal));
-			}
-
+		for (Map.Entry<Literal, String> entry : literals2String.entrySet()) {
+			if (!entry.getKey().isNegated())
+				System.out.println(entry.getValue() + ": " + entry.getKey().getSource().getMessage());
 		}
 	}
 	
-	public void debugCatNAccu() {
-		for (Information info : allInfo) {
-			if (logicArguments.get(info.getAsLiteral().getFirst()).isEmpty() && logicArguments.get(info.getAsLiteral().getLast()).isEmpty())
-				continue;
-			
-			Literal nonNegated = info.getAsLiteral().getFirst();
-			Literal negated = info.getAsLiteral().getLast();
-			
-			List<Double> forCategorizations = new ArrayList<>();
-			forCategorizations.add(hCategorizer(nonNegated));
-			
-			List<Double> againstCategorizations = new ArrayList<>();
-			againstCategorizations.add(hCategorizer(negated));
-			System.out.println("Log-Accumulator for: " + debugSingleLiteral(nonNegated) + " and " + debugSingleLiteral(negated) + " = " + logAccumulator(forCategorizations, againstCategorizations));
-		}
-		
-	}
-	
-	
-	public String debugSingleLiteral(Literal claim) {
-		List<LogicExpression> premises = logicArguments.get(claim);
-		String premisesString = "";
-		for (int j = 0; j < premises.size(); j++) {
-			LogicExpression premise = premises.get(j);
-			if (premise instanceof Junction) {
-				List<LogicExpression> junctionContent = ((Junction) premise).getContent();
-				premisesString += "(";
-				
-				for (int i = 0; i < junctionContent.size(); i++) {
-					
-					premisesString += (((Literal) junctionContent.get(i)).isNegated() ? "!" : "") +  infoList.indexOf(((Literal) junctionContent.get(i)).getSource()) ;
-					
-					if (i != junctionContent.size() - 1) 
-						premisesString += " & ";
-					
-				}
-				premisesString += ") => " +  (claim.isNegated() ? "!" : "") + infoList.indexOf(claim.getSource());
-
-			}
-			
-			else if (premise instanceof Literal) {
-				premisesString += (((Literal) premise).isNegated() ? "!" : "") +  infoList.indexOf(((Literal) premise).getSource())  
-					+ " => " + (claim.isNegated() ? "!" : "") + infoList.indexOf(claim.getSource());
-				
-			}
-			if (j != premises.size() -1 )
-				premisesString += ", ";
-		}
-
-		return "<[" + premisesString + "], " + (claim.isNegated() ? " !" : "") + infoList.indexOf(claim.getSource()) + " >";
-		
-	}
 
 	public void debugArguments() {
-		for (Literal l : logicArguments.keySet()) {
-			System.out.println(debugSingleLiteral(l));
+		for (List<LogicArgument> args : logicArguments.values()) {
+			for (LogicArgument arg : args) {
+				System.out.println(LogicArgument.asString(arg, literals2String));
+			}
 		}
 	}
+	
+	public void printUndercuts() {
+		for (Map.Entry<LogicArgument, ArgumentTree> entry : undercutTrees.entrySet()) {
+			LogicArgument arg = entry.getKey();
+			ArgumentTree at = entry.getValue();
+			System.out.println("Undercuts for " + LogicArgument.asString(arg, literals2String) + " [hCategorizer value : " +  LogicUtilities.hCategorizer(at) + "]");
+			System.out.println(ArgumentTree.printTree(at, "", literals2String));
 
+		}
+	}
+	
+	public void printRebuttals() {
+		for (Map.Entry<Literal, List<LogicArgument>> entry : rebuttals.entrySet()) {
+			Literal l = entry.getKey();
+			List<LogicArgument> rebuttals = entry.getValue();
+			System.out.println("Rebuttals for " + literals2String.get(l) + " [hCategorizer value : " + LogicUtilities.flatTreeHCategorizer(rebuttals.size()) + "]");
+			for (LogicArgument rebutter : rebuttals) 
+				System.out.println(LogicArgument.asString(rebutter, literals2String));
 
+		}
+	}
 	
-	
+	public void testAccumulator() {
+		for (Information i : allInfo) {
+			Literal l = i.getAsLiteral().getFirst();
+			Literal negated = i.getAsLiteral().getLast();
+			List<Double> forCat = new ArrayList<>();
+			List<Double> againstCat = new ArrayList<>();
+			
+			// rebuttals
+			if (i instanceof PreKnowledge) {
+				for (LogicArgument arg : rebuttals.get(negated))
+					System.out.println(LogicArgument.asString(arg, literals2String));
+			}
+			forCat.add(LogicUtilities.flatTreeHCategorizer(rebuttals.get(l).size()));
+			againstCat.add(LogicUtilities.flatTreeHCategorizer(rebuttals.get(negated).size()));
+			System.out.println("REBUTTALS hCat for: " + i.getMessage() + " [+: " + forCat + " | -: " + againstCat + "]");
 
-	
-
-	
-	
-	
-	
+			System.out.println("Acc result: " + LogicUtilities.logAccumulator(forCat, againstCat));
+			
+			// undercuts
+			forCat.clear();
+			againstCat.clear();
+			for (LogicArgument arg : logicArguments.get(l)) {
+				forCat.add(LogicUtilities.hCategorizer(undercutTrees.get(arg)));
+			}
+			for (LogicArgument arg : logicArguments.get(negated)) {
+				againstCat.add(LogicUtilities.hCategorizer(undercutTrees.get(arg)));
+			}
+			System.out.println("UNDERCUTS hCats for: " + i.getMessage() + " [+: " + forCat + " | -: " + againstCat + "]");
+			System.out.println("Acc result: " + LogicUtilities.logAccumulator(forCat, againstCat));
+		}
+	}
 
 }

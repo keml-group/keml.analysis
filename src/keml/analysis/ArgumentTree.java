@@ -27,16 +27,7 @@ public class ArgumentTree {
 	public List<ArgumentTree> getChildren() {
 		return children;
 	}
-//	
-//    public static String printTree(ArgumentTree node, String prefix, Map<Literal, String> literals2String, String tree) {
-//    	tree += prefix + "└── " + LogicArgument.asString(node.root, literals2String);
-//        for (int i = 0; i < node.children.size(); i++) {
-//            tree += printTree(node.children.get(i), prefix + "    ", literals2String, tree);
-//        }
-//        
-//        return tree;
-//    }
-
+	
 	public static String printTree(ArgumentTree node, String prefix, Map<Literal, String> literals2String) {
 	    StringBuilder tree = new StringBuilder();
 	    printTreeHelper(node, prefix, literals2String, tree);
