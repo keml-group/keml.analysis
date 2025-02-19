@@ -61,13 +61,15 @@ public class LogicArgument {
 		return content + ")";
 	}
 	
-	public static String asString(LogicArgument la, Map<Literal, String> literals2String) {
-		String result = "<{";
+	private static String premisesAsString(LogicArgument la, Map<Literal, String> literals2String) {
 		String premises = "";
 		for (int i = 0; i < la.getPremises().size(); i++) {
 			LogicExpression le = la.getPremises().get(i);
 			if (le instanceof Literal) {
-				premises += literals2String.get((Literal) le) + " => " + literals2String.get(la.getClaim());
+				premises += literals2String.get((Literal) le);
+				if (!((Literal) le).equals(la.getClaim())) 
+					premises += " => " + literals2String.get(la.getClaim());
+	
 			} else {
 				premises += junctionAsString((Junction) le, "(", literals2String) + " => " + literals2String.get(la.getClaim());
 			}
@@ -78,7 +80,11 @@ public class LogicArgument {
 			
 		}
 		
-		return result + premises + "}, " + literals2String.get(la.getClaim()) + ">";
+		return premises;
+	}
+	
+	public static String asString(LogicArgument la, Map<Literal, String> literals2String) {			
+		return "<{" +  premisesAsString(la, literals2String) + "}, " + literals2String.get(la.getClaim()) + ">";
 	}
 	
 	

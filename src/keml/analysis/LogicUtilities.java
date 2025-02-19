@@ -8,6 +8,7 @@ import keml.Information;
 import keml.Junction;
 import keml.Literal;
 import keml.LogicExpression;
+import keml.PreKnowledge;
 
 public class LogicUtilities {
 
@@ -18,7 +19,7 @@ public class LogicUtilities {
 			Literal counterClaim = findCounterLiteral(l);
 			rebuttals.put(l, logicArguments.get(counterClaim));
 		}
-		
+
 		return rebuttals;
 
 	}
@@ -60,7 +61,7 @@ public class LogicUtilities {
 				
 			} else {
 				for (LogicExpression junctionContent : ((Junction) premise).getContent()) {
-					// TODO what if junction within junction?
+					
 					counterLiteral = findCounterLiteral((Literal) junctionContent); 
 					if (logicArguments.containsKey(counterLiteral)) // if counter literal has argument(s)
 						for (LogicArgument undercutter : logicArguments.get(counterLiteral)) {
@@ -83,46 +84,43 @@ public class LogicUtilities {
 			return sourceInfo.getAsLiteral().get(1);
 	}
 	
-	public static double hCategorizer(ArgumentTree at) {
+	public static float hCategorizer(ArgumentTree at) {
 
-		List<ArgumentTree> incomingEdges = at.getChildren();
-		if (incomingEdges.isEmpty())
-			return 1.0;
-		double sum = 1.0;
-		for (ArgumentTree edge : incomingEdges) {
-            sum += hCategorizer(edge);
-        }
-	
-		return 1/(sum);
+	    List<ArgumentTree> incomingEdges = at.getChildren();
+	    if (incomingEdges.isEmpty())
+	        return 1.0f; 
+
+	    float sum = 0.0f; 
+	    for (ArgumentTree edge : incomingEdges) {
+	        sum += hCategorizer(edge); 
+	    }
+
+	    return 1.0f / (1.0f + sum); 
 	}
 	
-	public static double flatTreeHCategorizer(double numberOfChildren) {
+	public static float flatTreeHCategorizer(float numberOfChildren) {
 		
-		return 1/(1 + numberOfChildren);
+		return 1.0f/(1.0f + numberOfChildren);
 	}
 	
-	public static double logAccumulator(List<Double> forCategorizations, List<Double>againstCategorizations) {
-		if (forCategorizations.isEmpty() && againstCategorizations.isEmpty())
-			return 0.0;
-		else if (againstCategorizations.isEmpty())
-			return 1.0;
-		else if (forCategorizations.isEmpty())
-			return -1.0;
-		
-		double forSum = 1;
-		double againstSum = 1;
-		double result = 0;
-		for (double value : forCategorizations) {
-			forSum += value;
-		}
-		
-		for (double value : againstCategorizations) {
-			againstSum += value;
-		}
-		result += Math.log(forSum);
-		result -= Math.log(againstSum);
-		
-		return result;
+	public static float logAccumulator(List<Float> forCategorizations, List<Float>againstCategorizations) {
+	    if (forCategorizations.isEmpty() && againstCategorizations.isEmpty())
+	        return 0.0f;  
+
+	    float forSum = 1.0f; 
+	    float againstSum = 1.0f; 
+
+	    for (float value : forCategorizations) {
+	        forSum += Math.abs(value); 
+	    }
+
+	    for (float value : againstCategorizations) {
+	        againstSum += Math.abs(value);
+	    }
+
+	    double logResult = Math.log(forSum) - Math.log(againstSum);
+
+	    return (float) logResult; 
 		
 	}
 }
