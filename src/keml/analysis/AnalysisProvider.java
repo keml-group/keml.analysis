@@ -44,7 +44,10 @@ public class AnalysisProvider {
 				String basePath = targetFolder +"/" + FilenameUtils.removeExtension(file.getName());
 
 				ArgumentationStructurer as = new ArgumentationStructurer(conv);
-//				as.debug();
+				new ConversationAnalyser(conv).writeGeneralCSV(basePath + "-general.csv");
+				as.writeLogicArgumentationCSV(basePath + "-arguments.csv");
+				as.scoresMatrix(basePath + "-scores.xlsx");
+				
 //				new ConversationAnalyser(conv).createCSVs(basePath);
 //				LocaleUtil.setUserLocale(Locale.US);
 //				
