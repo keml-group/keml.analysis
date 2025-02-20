@@ -26,18 +26,7 @@ import keml.PreKnowledge;
 import keml.ReceiveMessage;
 
 
-
-
 public class ArgumentationStructurer {
-
-	
-	
-	// TODO we don't handle cycles in the model yet (e.g., a => not b, b => not a), which breaks analysis
-	// TODO Analysis Output for the Trees and Cats
-	// TODO improve readability of analysis output
-	// TODO validate SNegated_Implication with use case
-	// 
-	
 	
 	Conversation conv;
 	List<String> partners;
@@ -66,12 +55,13 @@ public class ArgumentationStructurer {
 		buildLogicArguments();
 		undercutTrees = LogicUtilities.createUndercutTreesMap(logicArguments);
 		rebuttals = LogicUtilities.createRebuttalsMap(logicArguments);
-		keml2Logic();
+		debugInfos();
+		debugArguments();
 	}
 	
 
 	
-	public void buildLogicArguments() {
+	private void buildLogicArguments() {
 
 			
 		for (Information i : allInfo) {
@@ -98,7 +88,7 @@ public class ArgumentationStructurer {
 	}
 	
 
-	public void mapLiteralsToStrings() {
+	private void mapLiteralsToStrings() {
 		String symbol = "L";
 		int i = 0;
 		for (Information inf : allInfo) {
@@ -108,20 +98,8 @@ public class ArgumentationStructurer {
 		}
 			
 	}
+
 	
-	public void keml2Logic() {
-
-		
-		debugInfos();
-		debugArguments();
-//		printUndercuts();
-//		printRebuttals();
-
-		
-
-	}
-	
-
 	public void debugInfos() {
 
 		for (Map.Entry<Literal, String> entry : literals2String.entrySet()) {
@@ -160,49 +138,43 @@ public class ArgumentationStructurer {
 		}
 	}
 	
-	public HashMap<Information, Float> undercutsAccumulator() {
-		HashMap<Information, Float> result = new HashMap<>();
+	public HashMap<Information, List<Float>> hCatValues(boolean undercuts, boolean minus) {
+		HashMap<Information, List<Float>> result = new HashMap<>();
 		for (Information i : allInfo) {
-			Literal l = i.getAsLiteral().getFirst();
-			Literal negated = i.getAsLiteral().getLast();
-			List<Float> forCat = new ArrayList<>();
-			List<Float> againstCat = new ArrayList<>();
-
-
-			for (LogicArgument arg : logicArguments.get(l)) 
-				forCat.add(LogicUtilities.hCategorizer(undercutTrees.get(arg)));
-		
-
-			for (LogicArgument arg : logicArguments.get(negated)) 
-				againstCat.add(LogicUtilities.hCategorizer(undercutTrees.get(arg)));
-
-			result.put(i, LogicUtilities.logAccumulator(forCat, againstCat));
+			Literal l = minus ? i.getAsLiteral().getLast() : i.getAsLiteral().getFirst();
+			List<Float> cats = new ArrayList<>();
+			
+			if (undercuts) {
+				for (LogicArgument arg : logicArguments.get(l)) 
+					cats.add(LogicUtilities.hCategorizer(undercutTrees.get(arg)));
+			} else {
+				cats = Arrays.asList(LogicUtilities.flatTreeHCategorizer(rebuttals.get(l).size()));
+			}
+			result.put(i, cats);
 		}
 		return result;
 	}
 	
-	public HashMap<Information, Float> rebuttalsAccumulator() {
+	public HashMap<Information, Float> accumulatorComputer(HashMap<Information, List<Float>> hCatPlus, HashMap<Information, List<Float>> hCatMinus) {
 		HashMap<Information, Float> result = new HashMap<>();
-		List<Float> forCat = new ArrayList<>();
-		List<Float> againstCat = new ArrayList<>();
-		for (Information i : allInfo) {
-			Literal l = i.getAsLiteral().getFirst();
-			Literal negated = i.getAsLiteral().getLast();
-
-			forCat = Arrays.asList(LogicUtilities.flatTreeHCategorizer(rebuttals.get(l).size()));
-			againstCat = Arrays.asList(LogicUtilities.flatTreeHCategorizer(rebuttals.get(negated).size()));
-
-
-			result.put(i, LogicUtilities.logAccumulator(forCat, againstCat));
-		}
+		hCatPlus.forEach((i, v) -> {
+			result.put(i, LogicUtilities.logAccumulator(v, hCatMinus.get(i)));
+		});
+		
 		return result;
 	}
+	
+
 	
 	public void scoresMatrix(String path) throws IOException {
 		LAFWorkbookController wbc = new LAFWorkbookController();
 		wbc.initializeForLAF(newInfos, preKnowledge, literals2String, logicArguments);
-		wbc.addTrustsForLAF(undercutsAccumulator(), "Undercuts");
-		wbc.addTrustsForLAF(rebuttalsAccumulator(), "Rebuttals");
+		HashMap<Information, List<Float>> undercutHCatPlus = hCatValues(true, false);
+		HashMap<Information, List<Float>> undercutHCatMinus = hCatValues(true, true);
+		HashMap<Information, List<Float>> rebuttalHCatPlus = hCatValues(false, false);
+		HashMap<Information, List<Float>> rebuttalHCatMinus = hCatValues(false, true);
+		wbc.addTrustsForLAF(undercutHCatPlus, undercutHCatMinus, accumulatorComputer(undercutHCatPlus, undercutHCatMinus), "Undercuts");
+		wbc.addTrustsForLAF(rebuttalHCatPlus, rebuttalHCatMinus, accumulatorComputer(rebuttalHCatPlus, rebuttalHCatMinus), "Rebuttals");
 		wbc.write(path);
 
 	}
@@ -222,24 +194,27 @@ public class ArgumentationStructurer {
 		
 		for (Information i : allInfo) {
 			List<String> partnerInfo = new ArrayList<>();
-			if (partner == null && i instanceof PreKnowledge) {
+			if (instructions && !i.isIsInstruction())
+				continue;
+			else if (!instructions && i.isIsInstruction())
+				continue;
+			
+			if (i instanceof PreKnowledge && partner == null) {
 				
 				partnerInfo.add(literals2String.get(i.getAsLiteral().getFirst()));
 				partnerInfo.add(i.getMessage());
 			} 
-			if (partner != null 
-					&& i instanceof NewInformation 
+			else if (i instanceof NewInformation 
 					&& ((NewInformation) i).getSource().getCounterPart().getName().equals(partner)) {
 				
 				partnerInfo.add(literals2String.get(i.getAsLiteral().getFirst()));
 				partnerInfo.add(i.getMessage());
 				
 			}
-			if (!partnerInfo.isEmpty() && instructions)
-				if (i.isIsInstruction())
-					literalMessagePairs.add(partnerInfo);
-			else
+			
+			if (!partnerInfo.isEmpty()) 
 				literalMessagePairs.add(partnerInfo);
+			
 		}
 		
 		return literalMessagePairs;
@@ -305,13 +280,40 @@ public class ArgumentationStructurer {
 		for (Map.Entry<Literal, List<LogicArgument>> entry : logicArguments.entrySet()) {
 			Literal claim = entry.getKey();
 			List<LogicArgument> args = entry.getValue();
-			for (LogicArgument arg : args) {
-				csvPrinter.printRecord((Object[]) new String[]{
-						literals2String.get(claim),
-						LogicArgument.asString(arg, literals2String)
-				});
-			}
+			if (args.isEmpty())
+				continue;
+			csvPrinter.printRecord((Object[]) new String[]{
+					literals2String.get(claim),
+					args.stream().map(n -> LogicArgument.asString(n, literals2String)).collect(Collectors.toList()).toString()
+			});
 			
+		}
+		csvPrinter.printRecord();
+		csvPrinter.printRecord("Undercut Trees");
+		for (Map.Entry<LogicArgument, ArgumentTree> entry : undercutTrees.entrySet()) {
+			LogicArgument arg = entry.getKey();
+			ArgumentTree at = entry.getValue();
+			if (at.children.isEmpty())
+				continue;
+			
+			csvPrinter.printRecord((Object[]) new String[]{
+					ArgumentTree.printTree(undercutTrees.get(arg), "", literals2String).strip()
+					});
+
+		}
+		
+		csvPrinter.printRecord();
+		csvPrinter.printRecord("Rebuttals");
+		csvPrinter.printRecord((Object[]) new String[] {"Claim", "rebutted by"});
+		for (Map.Entry<Literal, List<LogicArgument>> entry : rebuttals.entrySet()) {
+			Literal claim = entry.getKey();
+			List<LogicArgument> args = entry.getValue();
+			if (args.isEmpty())
+				continue;
+			csvPrinter.printRecord((Object[]) new String[]{
+					literals2String.get(claim),
+					args.stream().map(n -> LogicArgument.asString(n, literals2String)).collect(Collectors.toList()).toString()
+			});			
 		}
 
 	}

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -190,17 +191,25 @@ public class LAFWorkbookController {
 		}	
 	}
 	
-	public void addTrustsForLAF(HashMap<Information, Float> trusts, String name) {
+	public void addTrustsForLAF(Map<Information, List<Float>> hCatPlus, Map<Information, List<Float>> hCatMinus, HashMap<Information, Float> trusts, String name) {
 		Row headers0 = sheet.getRow(0);
 		Cell i = headers0.createCell(firstFreeColumn);
 		i.setCellValue(name);
 		i.setCellStyle(bigHeaderStyle);
 		sheet.autoSizeColumn(firstFreeColumn);
 		i = headers0.createCell(firstFreeColumn+1);
-//		sheet.addMergedRegion(new CellRangeAddress(0, 1, firstFreeColumn, firstFreeColumn));
+		sheet.addMergedRegion(new CellRangeAddress(0, 0, firstFreeColumn, firstFreeColumn+2));
 		
 		Row headers = sheet.getRow(1);
 		i = headers.createCell(firstFreeColumn);
+		i.setCellValue("hCat+");
+		i.setCellStyle(headerMessageStyle);
+		
+		i = headers.createCell(firstFreeColumn+1);
+		i.setCellValue("hCat-");
+		i.setCellStyle(headerMessageStyle);
+		
+		i = headers.createCell(firstFreeColumn+2);
 		i.setCellValue("logAccumulator");
 		i.setCellStyle(headerMessageStyle);
 		
@@ -208,11 +217,13 @@ public class LAFWorkbookController {
 		trusts.forEach((info, score) -> {
 			int rowIndex = infoToRow.get(info);
 			Row current = sheet.getRow(rowIndex);
-			setAndColorByValue(current.createCell(firstFreeColumn), score);
+			current.createCell(firstFreeColumn).setCellValue(hCatPlus.get(info).toString());
+			current.createCell(firstFreeColumn+1).setCellValue(hCatMinus.get(info).toString());
+			setAndColorByValue(current.createCell(firstFreeColumn+2), score);
 		});
 		setBorderLeft(firstFreeColumn);
 
-		firstFreeColumn++;
+		firstFreeColumn += 3;
 	}
 	
 	private void sizeColumns() {
