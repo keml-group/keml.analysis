@@ -18,7 +18,7 @@ public class AnalysisProvider {
 		
 		String folder;
 		if (args.length == 0) {
-			folder = "../keml.sample/introductoryExamples";
+			folder = "../keml.sample/LAFExamples";
 		} else {
 			folder = args[0];			
 		}

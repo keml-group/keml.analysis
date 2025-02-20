@@ -55,8 +55,8 @@ public class ArgumentationStructurer {
 		buildLogicArguments();
 		undercutTrees = LogicUtilities.createUndercutTreesMap(logicArguments);
 		rebuttals = LogicUtilities.createRebuttalsMap(logicArguments);
-		debugInfos();
-		debugArguments();
+//		debugInfos();
+//		debugArguments();
 	}
 	
 
@@ -176,6 +176,7 @@ public class ArgumentationStructurer {
 		wbc.addTrustsForLAF(undercutHCatPlus, undercutHCatMinus, accumulatorComputer(undercutHCatPlus, undercutHCatMinus), "Undercuts");
 		wbc.addTrustsForLAF(rebuttalHCatPlus, rebuttalHCatMinus, accumulatorComputer(rebuttalHCatPlus, rebuttalHCatMinus), "Rebuttals");
 		wbc.write(path);
+		System.out.println("Wrote trust analysis to " + path);
 
 	}
 	
