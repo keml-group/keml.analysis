@@ -6,7 +6,9 @@ import java.util.stream.Stream;
 
 import org.apache.commons.csv.CSVPrinter;
 
+import keml.ITargetable;
 import keml.Information;
+import keml.InformationLink;
 import keml.InformationLinkType;
 import keml.NewInformation;
 import keml.PreKnowledge;
@@ -33,34 +35,94 @@ public class InformationPartAnalyser {
 		//matrix holds fact and instruction entry for the author (for pre-knowledge) and each partner
 		int[][] countAttacks = new int[dimension][dimension];
 		int[][] countSupports = new int[dimension][dimension];
+		int[][] countRecAttacks = new int[dimension][dimension];
+		int[][] countRecSupports = new int[dimension][dimension];
 		
 		Stream.concat(newInfos.stream(), preKnowledge.stream())
 			.forEach(info -> {
 				int index = getIndexOfInfo(info);
 				info.getCauses().forEach(link -> {
-					int partnerIndex = getIndexOfInfo(link.getTarget());
-					if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
-						countSupports[index][partnerIndex] +=1;
+					if (link.getTarget2() instanceof Information) { //NEW: because of new meta model 
+						Information i = (Information) link.getTarget2();
+						int partnerIndex = getIndexOfInfo(i);
+						if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
+							countSupports[index][partnerIndex] +=1;
+						}
+						if (link.getType() == InformationLinkType.ATTACK || link.getType() == InformationLinkType.STRONG_ATTACK) {
+							countAttacks[index][partnerIndex] +=1;
+						}
+					} else {
+						if (link.getTarget2() instanceof InformationLink) {
+							InformationLink i = (InformationLink) link.getTarget2();
+							int partnerIndex = getIndexOfInfoLink(i);
+							if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
+								countRecSupports[index][partnerIndex] +=1;
+							}
+							if (link.getType() == InformationLinkType.ATTACK || link.getType() == InformationLinkType.STRONG_ATTACK) {
+								countRecAttacks[index][partnerIndex] +=1;
+							}
+						} //TODO JP
 					}
-					if (link.getType() == InformationLinkType.ATTACK || link.getType() == InformationLinkType.STRONG_ATTACK) {
-						countAttacks[index][partnerIndex] +=1;
-					}
+					
+
 					// todo analyse supplements?
 				});
 			});
 		
-		String[][] text = combineMatrices(countAttacks, countSupports);
+		String[][] text = combineMatrices(countAttacks, countSupports,countRecAttacks, countRecSupports);
+		writeMatrix(text, csvPrinter);	
+	}
+	
+	public void writeInformationConnections2(CSVPrinter csvPrinter) throws IOException { //JP neuer tabellen eintragi
+		//matrix holds fact and instruction entry for the author (for pre-knowledge) and each partner
+		int[][] countAttacks = new int[dimension][dimension];
+		int[][] countSupports = new int[dimension][dimension];
+		int[][] countRecAttacks = new int[dimension][dimension]; //NEW: matrix that saves number of recursive attacks
+		int[][] countRecSupports = new int[dimension][dimension]; //NEW: matrix that saves number of recursive supports
+		
+		Stream.concat(newInfos.stream(), preKnowledge.stream())
+			.forEach(info -> {
+				int index = getIndexOfInfo(info);
+				info.getCauses().forEach(link -> {
+					if (link.getTarget2() instanceof Information) { //NEW: because of new meta model
+						Information i = (Information) link.getTarget2();
+						int partnerIndex = getIndexOfInfo(i);
+						if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
+							countSupports[index][partnerIndex] +=1;
+						}
+						if (link.getType() == InformationLinkType.ATTACK || link.getType() == InformationLinkType.STRONG_ATTACK) {
+							countAttacks[index][partnerIndex] +=1;
+						}
+					} else { //NEW: count recursive edges
+						if (link.getTarget2() instanceof InformationLink) {
+							InformationLink i = (InformationLink) link.getTarget2();
+							int partnerIndex = getIndexOfInfoLink(i);
+							if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
+								countRecSupports[index][partnerIndex] +=1;
+							}
+							if (link.getType() == InformationLinkType.ATTACK || link.getType() == InformationLinkType.STRONG_ATTACK) {
+								countRecAttacks[index][partnerIndex] +=1;
+							}
+						} //TODO JP
+					}
+					
+
+					// todo analyse supplements?
+				});
+			});
+		
+		String[][] text = combineMatrices(countAttacks, countSupports,countRecAttacks, countRecSupports);
 		writeMatrix(text, csvPrinter);	
 	}
 
 
-	// writes both matrices a, b into one having entries "a/b"
+	// writes both matrices a, b into one having entries "a/b" (NEW: now there are 4 because recursive attacks and supports are added)
 	// assumption is that a and b are square matrices and have the same length dimensions
-	private String[][] combineMatrices(int[][] a, int[][]b) {
+	private String[][] combineMatrices(int[][] a, int[][]b,int[][] c, int[][]d) {
 		String[][] result = new String[dimension][dimension];
 		for (int i = 0; i < dimension; i++) {
 			for (int j=0; j < dimension; j++) {
-				result[i][j] = a[i][j]+"/"+b[i][j];
+				result[i][j] = a[i][j]+"/"+b[i][j]+"/"+c[i][j]+"/"+d[i][j];
 			}
 		}
 		return result;
@@ -80,7 +142,7 @@ public class InformationPartAnalyser {
 	// writes both matrices A, B into one having entries "a/b"
 	private void writeMatrix(String[][] m, CSVPrinter csvPrinter) throws IOException {
 		String[] headers = headers();
-		csvPrinter.print("Attacks/Supports");
+		csvPrinter.print("Attacks/Supports/RecAttacks/RecSupports");
 		csvPrinter.printRecord(headers);
 		for (int i = 0; i < dimension; i++) {
 			csvPrinter.print(headers[i]);
@@ -92,12 +154,32 @@ public class InformationPartAnalyser {
 		int offset;
 		if (info.isIsInstruction()) offset = 1; else offset = 0;
 		int partnerIndex;
-		if (info instanceof NewInformation) {
+		if (info instanceof NewInformation) { //NEW: because of new meta model
 			partnerIndex = partners.indexOf(((NewInformation) info).getSourceConversationPartner().getName());
 		} else {
 			partnerIndex = partners.size();
 		}
 		return 2*partnerIndex + offset;
 	}
-
+	
+	// NEW: the target node of an recursive edge is the target node of the "normal" edge to which it (recursively) points
+	private int getIndexOfInfoLink(InformationLink link) {
+		ITargetable target = link.getTarget2();
+		if (target instanceof NewInformation) {
+			int offset;
+			Information info = (Information) link.getTarget2(); 
+			if (info.isIsInstruction()) offset = 1; else offset = 0;
+			int partnerIndex;
+			if (info instanceof NewInformation) {
+				partnerIndex = partners.indexOf(((NewInformation) info).getSourceConversationPartner().getName());
+			} else {
+				partnerIndex = partners.size();
+			}
+			return 2*partnerIndex + offset;
+		} else {
+			link = (InformationLink) target;
+			return getIndexOfInfoLink(link);
+		}
+	}
+	
 }

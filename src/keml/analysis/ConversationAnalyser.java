@@ -16,6 +16,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
 import keml.Conversation;
+import keml.InformationLink;
 import keml.Message;
 import keml.NewInformation;
 import keml.ReceiveMessage;
@@ -81,6 +82,7 @@ public class ConversationAnalyser {
 			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "Instructions", csvPrinter, 0L, true);
 			// csvPrinter.printRecord("Trust:");
 			csvPrinter.printRecord("Repetitions", countRepetitions());
+			csvPrinter.printRecord("RecAttacks", countRecLinks()); // NEW: new entry for number of recursive edges
 			csvPrinter.flush();
 		}
 		System.out.println("Wrote general analysis to " + path);
@@ -143,6 +145,27 @@ public class ConversationAnalyser {
 
 	private Integer countRepetitions() {
 		return receives.stream().mapToInt(s -> s.getRepeats().size()).sum();
+	}
+	
+	// NEW: count all recursive edges
+	private Integer countRecLinks() {
+		List<NewInformation> infos = getNewInfos(receives);
+		List<InformationLink> links = new ArrayList<>();
+		List<InformationLink> recLinks = new ArrayList<>();
+		// get all information links
+		infos.forEach(e -> {
+			if (e.getCauses() != null) {
+				e.getCauses().forEach(e2 -> {
+					links.add(e2);
+				});
+			}
+		});
+		// get all recursive information links
+		links.forEach(e ->{
+			if (e.getTarget2() instanceof InformationLink)
+				recLinks.add(e);
+		});
+		return recLinks.size();
 	}
 
 	private void writeMessageCounts(CSVPrinter csvPrinter) throws IOException {

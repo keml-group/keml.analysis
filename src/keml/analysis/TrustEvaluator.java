@@ -1,6 +1,8 @@
 package keml.analysis;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,7 +48,6 @@ public class TrustEvaluator {
 	
 	public static List<Pair<String,Map<String, Float>>> standardTrustConfigurations(EList<ConversationPartner> convoPartners) {
 		ArrayList<Pair<String,Map<String, Float>>> res = new ArrayList<>();
-
 		Map<String, Float> valuesPerPartner10 = new HashMap<String, Float>(); // LLM && other 1.0
 		Map<String, Float> valuesPerPartner0510 = new HashMap<String, Float>(); // LLM 0.5 | other 1.0
 		Map<String, Float> valuesPerPartner1005 = new HashMap<String, Float>(); // LLM 1.0 | other 0.5
@@ -145,7 +146,7 @@ public class TrustEvaluator {
 			if (toVisit.size() == remaining) {
 				System.err.println(toVisit.toString());
 				for (Information i: toVisit) {
-					for(InformationLink l : i.getTargetedBy()) {
+					for(InformationLink l : i.getTargetedBy2()) {
 						System.err.println(l.getSource().getMessage() + " -> "+i.getMessage());
 					}
 				}
@@ -155,7 +156,7 @@ public class TrustEvaluator {
 	}
 	
 	private boolean ready(Information info, HashSet<Information> toVisit) {
-		for (InformationLink informationLink : info.getTargetedBy()) {
+		for (InformationLink informationLink : info.getTargetedBy2()) {
 			if (toVisit.contains(informationLink.getSource()))
 				return false;
 		}
@@ -170,7 +171,7 @@ public class TrustEvaluator {
 	
 	// relies on current trust 
 	private float argumentationScore(Information info) {
-		return (float) info.getTargetedBy().stream()
+		return (float) info.getTargetedBy2().stream()
 			.mapToDouble(link -> score(link))
 			.sum();
 	}
@@ -196,7 +197,68 @@ public class TrustEvaluator {
 			break;	
 		}
 		// TODO should we ignore nodes that have negative trust or let them work in opposite direction? Currently opposite:
-		return edgeWeight*link.getSource().getCurrentTrust();
+		float i = checkRecursive(link,1);
+		return edgeWeight*link.getSource().getCurrentTrust() *checkRecursive(link,1); // NEW: multiply link trust with recursive link trust
+	}
+	
+	class SaveEdgeWeight {    // NEW: to saves floats inside forEach loop
+	    float number = 1.0f;
+	    float total = 1.0f;
+	}
+	/*
+	 Recursive Supports:
+	 	- if (points to "normal" edge): increase the trust of a support or the distrust of an attack
+	 	- if (points to recursive edge): strengthen the increase of a recursive support or the reduction of an recursive attack
+	 Recursive Attacks:
+	 	- if (points to "normal" edge): reduce the trust of a support or an attack
+	 	- if (points to recursive edge): reduce the trust of a recursive support and the distrust of an attack
+	 	-> counterWasAPreviousAttack used for recursive attacks targeting recursive attacks
+	 */
+	private float checkRecursive(InformationLink link, int counterWasAPreviousAttack) { // NEW: (recursively) calculate the trust of recursive edges
+		SaveEdgeWeight edgeWeight = new SaveEdgeWeight();
+		if (link.getTargetedBy2().isEmpty()) {
+			return 1.0f;
+		} else {
+			EList<InformationLink> recLinks = link.getTargetedBy2();
+			recLinks.forEach(e -> {
+				switch(e.getType()) {
+					case SUPPORT:
+						edgeWeight.number = 1.33f * checkRecursive(e,absoluteValue(counterWasAPreviousAttack)); // increase of 1/3 so that SUPPORT*ATTACK = 1
+						break;
+					case STRONG_SUPPORT:
+						edgeWeight.number = 2.0f * checkRecursive(e,absoluteValue(counterWasAPreviousAttack));
+						break;
+					case ATTACK:
+						if (counterWasAPreviousAttack > 0) 
+							edgeWeight.number = 0.75f * checkRecursive(e,counterWasAPreviousAttack*(-1));
+						else 
+							edgeWeight.number = 1.17f * checkRecursive(e,counterWasAPreviousAttack*(-1));
+						break;
+					case STRONG_ATTACK:
+						if (counterWasAPreviousAttack > 0) {
+							edgeWeight.number = 0.5f * checkRecursive(e,counterWasAPreviousAttack*(-1));
+						} else {
+							edgeWeight.number = 1.5f * checkRecursive(e,counterWasAPreviousAttack*(-1));
+						}
+						break;
+					case SUPPLEMENT:
+					default:
+						edgeWeight.number = 1.0f;
+						break;	
+				}
+				edgeWeight.total = edgeWeight.total * edgeWeight.number; // if an edges is targeted by more than one edge at one recursive levels their effects are multiplied (STRONG_ATTACK*STRONG_SUPPORT=1)
+			 });
+			return edgeWeight.total;
+		}
+		
+	}
+	
+	// NEW: resets counterWasAPreviousAttack
+	private int absoluteValue(int x) {
+		if (x>=0) 
+			return x;
+		else
+			return x*(-1);
 	}
 	
 	private float getRepetitionScore(Information info) {
