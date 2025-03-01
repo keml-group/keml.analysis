@@ -33,7 +33,7 @@ This CSV file holds a Message Part and a Knowledge Part where it gives statistic
 The Message Part gives counts for sends and receives, as well as interruptions.
 The Knowledge Part counts PreKnowledge and New information, split into Facts and Instructions. It also counts repetitions.
 
-![Example General Statistics](doc/laf_example-general-csv.png)
+![Example General Statistics](doc/laf_example-general-csv.PNG)
 
 
 ### Argumentation Data
@@ -46,10 +46,10 @@ This CSV file consists of multiple relevant data to the state of the analysied c
 - A list of all rebuttals found for each literal/information piece
 
 
-![Example Argumentation Info and Literal Mapping](doc/laf_example-arguments-output1.png)
-![Example Derived Logic Arguments](doc/laf_example-arguments-output2.png)
-![Example Constructed Undercut Trees](doc/laf_example-arguments-undercuts.png)
-![Example Found Rebuttals](doc/laf_example-arguments-rebuttals.png)
+![Example Argumentation Info and Literal Mapping](doc/laf_example-arguments-output1.PNG)
+![Example Derived Logic Arguments](doc/laf_example-arguments-output2.PNG)
+![Example Constructed Undercut Trees](doc/laf_example-arguments-undercuts.PNG)
+![Example Found Rebuttals](doc/laf_example-arguments-rebuttals.PNG)
 
 ### Trust Scores
 
@@ -62,7 +62,7 @@ Additionally the file depicts the following data:
 3) The **argument count \#Arg+** counting how many arguments support the information
 4) The **argument count \#Arg-** counting how many arguments attack the information
 
-![Example Trust Scores](doc/laf_example-trust-xlsx.png)
+![Example Trust Scores](doc/laf_example-trust-xlsx.PNG)
 
 
 #### Categorization
