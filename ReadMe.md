@@ -59,8 +59,8 @@ The .xlsx file showcases [categorization](#categorization) and [accumulation](#a
 Additionally the file depicts the following data:
 1) The **time stamp** (-1 for pre knowledge) with the background color stating whether i is fact (green) or instruction (orange)
 2) The **message** column with the background color blue for LLM messages and yellow for all other messages
-3) The **argument count \#Arg+** counting how many arguments support the information
-4) The **argument count \#Arg-** counting how many arguments attack the information
+3) The **argument count \#Arg+** count of how many arguments exist for the information piece
+4) The **argument count \#Arg-** count of how many arguments exist against the information piece
 
 ![Example Trust Scores](doc/laf_example-trust-xlsx.PNG)
 
