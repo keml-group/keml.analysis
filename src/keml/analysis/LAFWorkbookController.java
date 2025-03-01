@@ -28,6 +28,12 @@ import keml.Literal;
 import keml.NewInformation;
 import keml.PreKnowledge;
 
+/**
+ * A class to modify and adjust {@link XSSFWorkbook} to facilitate the construct
+ * of the analysis matrix (i.e., xlsx file) unique to the LAF version of keml.
+ * <p>This class basically follows the same structure the baseline version ({@link WorkbookController}) but with
+ * minor modification to accommodate for LAF-related analysis matrix. </p>
+ */
 public class LAFWorkbookController {
 	
 	XSSFWorkbook wb;
@@ -51,6 +57,9 @@ public class LAFWorkbookController {
 	private HashMap<Information, Integer> infoToRow;
 	
 
+	/**
+	 * Constructor for {@link LAFWorkbookController}
+	 */
 	public LAFWorkbookController() {
 		
 		infoToRow = new HashMap<>();
@@ -96,12 +105,14 @@ public class LAFWorkbookController {
 		headers1.createCell(1);
 		sheet.addMergedRegion(new CellRangeAddress(0, 1, 1, 1));
 
+		// for count of arguments for a given claim
 		i = headers.createCell(2);
 		i.setCellValue("#Arg+");
 		i.setCellStyle(headerStyle);
 		headers1.createCell(2);
 		sheet.addMergedRegion(new CellRangeAddress(0, 1, 2, 2));
 		
+		// for count of arguments against a given claim
 		i = headers.createCell(3);
 		i.setCellValue("#Arg-");
 		i.setCellStyle(headerStyle);
@@ -171,7 +182,7 @@ public class LAFWorkbookController {
 			t.setCellValue(-1);
 			colorByIsInstruction(t, pre.isIsInstruction());
 			Cell msg = r.createCell(1);
-			msg.setCellValue(literals2String.get(pre.getAsLiteral().getFirst()) + ": " + pre.getMessage());
+			msg.setCellValue(literals2String.get(pre.getAsLiteral().getFirst()) + ": " + pre.getMessage()); 
 			colorByOrigin(msg, false);
 			r.createCell(2).setCellValue(logicArgs.get(pre.getAsLiteral().get(0)).size());
 			r.createCell(3).setCellValue(logicArgs.get(pre.getAsLiteral().get(1)).size());
