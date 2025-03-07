@@ -91,7 +91,7 @@ public class LAFConversationAnalyser {
 		//iterate all information pieces
 		for (Information i : allInfo) {
 			//for each literal representation
-			for (Literal l : i.getAsLiteral()) {
+			for (Literal l : i.getAsLiterals()) {
 				//create a list of logic arguments for the literal
 				List<LogicArgument> args = new ArrayList<>(); 
 				
@@ -124,7 +124,7 @@ public class LAFConversationAnalyser {
 		String symbol = "L";
 		int i = 0;
 		for (Information inf : allInfo) {
-			for (Literal l : inf.getAsLiteral()) 
+			for (Literal l : inf.getAsLiterals()) 
 				literals2String.put(l, (l.isNegated() ? "¬" : "") + symbol + i);
 			i++;
 		}
@@ -143,7 +143,7 @@ public class LAFConversationAnalyser {
 	public HashMap<Information, List<Float>> hCatComputer(boolean undercuts, boolean minus) {
 		HashMap<Information, List<Float>> result = new HashMap<>();
 		for (Information i : allInfo) {
-			Literal l = minus ? i.getAsLiteral().getLast() : i.getAsLiteral().getFirst();
+			Literal l = minus ? i.getAsLiterals().getLast() : i.getAsLiterals().getFirst();
 			List<Float> cats = new ArrayList<>();
 			
 			if (undercuts) {
@@ -234,13 +234,13 @@ public class LAFConversationAnalyser {
 			
 			if (i instanceof PreKnowledge && partner == null) {
 				// pre-knowledge of author
-				partnerInfo.add(literals2String.get(i.getAsLiteral().getFirst()));
+				partnerInfo.add(literals2String.get(i.getAsLiterals().getFirst()));
 				partnerInfo.add(i.getMessage());
 			} 
 			else if (i instanceof NewInformation 
 					&& ((NewInformation) i).getSource().getCounterPart().getName().equals(partner)) {
 				
-				partnerInfo.add(literals2String.get(i.getAsLiteral().getFirst()));
+				partnerInfo.add(literals2String.get(i.getAsLiterals().getFirst()));
 				partnerInfo.add(i.getMessage());
 				
 			}

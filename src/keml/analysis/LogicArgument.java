@@ -70,7 +70,7 @@ public class LogicArgument {
 				content += junctionAsString((Junction) le, content, literals2String);
 			} // conjunct or disjunct the content so far
 			if (i < j.getContent().size() - 1)
-				content += j.isIsDisjunction() ? " || " : " && ";
+				content += j.isDisjunction() ? " || " : " && ";
 			
 		}
 		

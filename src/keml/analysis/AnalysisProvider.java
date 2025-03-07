@@ -23,6 +23,10 @@ public class AnalysisProvider {
 			folder = args[0];			
 		}
 		
+		/* Logic-based samples/convos should have a way to distinguish them.
+		 * In this case: "LAF" in the name of the folder */
+		boolean logicBased = folder.contains("LAF");
+		
 		File sourceFolder = new File(folder + "/keml/");
 		File targetFolder = new File(folder+ "/analysis/");
 
@@ -42,22 +46,25 @@ public class AnalysisProvider {
 				Conversation conv = new KemlFileHandler().loadKeml(source);
 				
 				String basePath = targetFolder +"/" + FilenameUtils.removeExtension(file.getName());
-
-				LAFConversationAnalyser as = new LAFConversationAnalyser(conv);
-				new ConversationAnalyser(conv).writeGeneralCSV(basePath + "-general.csv");
-				as.writeLogicArgumentationCSV(basePath + "-arguments.csv");
-				as.scoresMatrix(basePath + "-scores.xlsx");
 				
-//				new ConversationAnalyser(conv).createCSVs(basePath);
-//				LocaleUtil.setUserLocale(Locale.US);
-//				
-//				for(int i = 2; i<= 10; i++) {
-//					TrustEvaluator trusty = new TrustEvaluator(conv, i);
-//					trusty.writeRowAnalysis(
-//							basePath+"-w"+i+"-",
-//							TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()),
-//							1.0F);
-//				}
+				if (logicBased) { // separate logic-based and base frameworks' analyses
+					LAFConversationAnalyser as = new LAFConversationAnalyser(conv);
+					new ConversationAnalyser(conv).writeGeneralCSV(basePath + "-general.csv");
+					as.writeLogicArgumentationCSV(basePath + "-arguments.csv");
+					as.scoresMatrix(basePath + "-scores.xlsx");
+				} else {
+					new ConversationAnalyser(conv).createCSVs(basePath);
+					LocaleUtil.setUserLocale(Locale.US);
+					
+					for(int i = 2; i<= 10; i++) {
+						TrustEvaluator trusty = new TrustEvaluator(conv, i);
+						trusty.writeRowAnalysis(
+								basePath+"-w"+i+"-",
+								TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()),
+								1.0F);
+					}
+				}
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

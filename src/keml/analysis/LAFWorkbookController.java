@@ -182,10 +182,10 @@ public class LAFWorkbookController {
 			t.setCellValue(-1);
 			colorByIsInstruction(t, pre.isIsInstruction());
 			Cell msg = r.createCell(1);
-			msg.setCellValue(literals2String.get(pre.getAsLiteral().getFirst()) + ": " + pre.getMessage()); 
+			msg.setCellValue(literals2String.get(pre.getAsLiterals().getFirst()) + ": " + pre.getMessage()); 
 			colorByOrigin(msg, false);
-			r.createCell(2).setCellValue(logicArgs.get(pre.getAsLiteral().get(0)).size());
-			r.createCell(3).setCellValue(logicArgs.get(pre.getAsLiteral().get(1)).size());
+			r.createCell(2).setCellValue(logicArgs.get(pre.getAsLiterals().get(0)).size());
+			r.createCell(3).setCellValue(logicArgs.get(pre.getAsLiterals().get(1)).size());
 		}
 		for (int i=0; i< newInfos.size();i++) {
 			NewInformation info = newInfos.get(i);
@@ -195,10 +195,10 @@ public class LAFWorkbookController {
 			t.setCellValue(info.getTiming());
 			colorByIsInstruction(t, info.isIsInstruction());
 			Cell msg = r.createCell(1);
-			msg.setCellValue(literals2String.get(info.getAsLiteral().getFirst()) + ": " + info.getMessage());
+			msg.setCellValue(literals2String.get(info.getAsLiterals().getFirst()) + ": " + info.getMessage());
 			colorByOrigin(msg, info.getSourceConversationPartner().getName().equals("LLM"));
-			r.createCell(2).setCellValue(logicArgs.get(info.getAsLiteral().get(0)).size());
-			r.createCell(3).setCellValue(logicArgs.get(info.getAsLiteral().get(1)).size());
+			r.createCell(2).setCellValue(logicArgs.get(info.getAsLiterals().get(0)).size());
+			r.createCell(3).setCellValue(logicArgs.get(info.getAsLiterals().get(1)).size());
 		}	
 	}
 	

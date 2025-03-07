@@ -98,9 +98,9 @@ public class LogicUtilities {
 		Information sourceInfo = l.getSource();
 		
 		if (l.isNegated())
-			return sourceInfo.getAsLiteral().get(0); //non-negated are stored first during parsing
+			return sourceInfo.getAsLiterals().get(0); //non-negated are stored first during parsing
 		else 
-			return sourceInfo.getAsLiteral().get(1); //negated are stored last during parsing
+			return sourceInfo.getAsLiterals().get(1); //negated are stored last during parsing
 	}
 	
 	
