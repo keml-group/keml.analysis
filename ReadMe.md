@@ -1,6 +1,6 @@
 # KEML Analysis
 
-**Note:** This branch features an alternative [KEML](https://github.com/keml-group/) component that leverages logic-based argumentation framework (**LAF**), and is designed *only* to be used along other LAF components of KEML. For the corresponding baseline version of this component, see the baseline [bipolar weighted framework](https://github.com/keml-group/keml.analysis) version.
+**Note:** This branch features an alternative [KEML](https://github.com/keml-group/) component that leverages a logic-based argumentation framework (**LAF**), and is currently *only* tested for use in conjunction with other LAF components of KEML. For the corresponding base version of this component, see the [base analysis](https://github.com/keml-group/keml.analysis) repository.
 -----------------------
 This project analyses KEML files statistically. For each KEML file it produces:
 1) [General Statistics](#general-statistics)
