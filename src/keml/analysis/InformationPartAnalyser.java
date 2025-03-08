@@ -42,8 +42,8 @@ public class InformationPartAnalyser {
 			.forEach(info -> {
 				int index = getIndexOfInfo(info);
 				info.getCauses().forEach(link -> {
-					if (link.getTarget2() instanceof Information) { //NEW: because of new meta model 
-						Information i = (Information) link.getTarget2();
+					if (link.getTarget() instanceof Information) { //NEW: because of new meta model 
+						Information i = (Information) link.getTarget();
 						int partnerIndex = getIndexOfInfo(i);
 						if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
 							countSupports[index][partnerIndex] +=1;
@@ -52,8 +52,8 @@ public class InformationPartAnalyser {
 							countAttacks[index][partnerIndex] +=1;
 						}
 					} else {
-						if (link.getTarget2() instanceof InformationLink) {
-							InformationLink i = (InformationLink) link.getTarget2();
+						if (link.getTarget() instanceof InformationLink) {
+							InformationLink i = (InformationLink) link.getTarget();
 							int partnerIndex = getIndexOfInfoLink(i);
 							if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
 								countRecSupports[index][partnerIndex] +=1;
@@ -84,8 +84,8 @@ public class InformationPartAnalyser {
 			.forEach(info -> {
 				int index = getIndexOfInfo(info);
 				info.getCauses().forEach(link -> {
-					if (link.getTarget2() instanceof Information) { //NEW: because of new meta model
-						Information i = (Information) link.getTarget2();
+					if (link.getTarget() instanceof Information) { //NEW: because of new meta model
+						Information i = (Information) link.getTarget();
 						int partnerIndex = getIndexOfInfo(i);
 						if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
 							countSupports[index][partnerIndex] +=1;
@@ -94,8 +94,8 @@ public class InformationPartAnalyser {
 							countAttacks[index][partnerIndex] +=1;
 						}
 					} else { //NEW: count recursive edges
-						if (link.getTarget2() instanceof InformationLink) {
-							InformationLink i = (InformationLink) link.getTarget2();
+						if (link.getTarget() instanceof InformationLink) {
+							InformationLink i = (InformationLink) link.getTarget();
 							int partnerIndex = getIndexOfInfoLink(i);
 							if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
 								countRecSupports[index][partnerIndex] +=1;
@@ -164,10 +164,10 @@ public class InformationPartAnalyser {
 	
 	// NEW: the target node of an recursive edge is the target node of the "normal" edge to which it (recursively) points
 	private int getIndexOfInfoLink(InformationLink link) {
-		ITargetable target = link.getTarget2();
+		ITargetable target = link.getTarget();
 		if (target instanceof NewInformation) {
 			int offset;
-			Information info = (Information) link.getTarget2(); 
+			Information info = (Information) link.getTarget(); 
 			if (info.isIsInstruction()) offset = 1; else offset = 0;
 			int partnerIndex;
 			if (info instanceof NewInformation) {

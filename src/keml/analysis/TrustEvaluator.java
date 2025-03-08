@@ -146,7 +146,7 @@ public class TrustEvaluator {
 			if (toVisit.size() == remaining) {
 				System.err.println(toVisit.toString());
 				for (Information i: toVisit) {
-					for(InformationLink l : i.getTargetedBy2()) {
+					for(InformationLink l : i.getTargetedBy()) {
 						System.err.println(l.getSource().getMessage() + " -> "+i.getMessage());
 					}
 				}
@@ -156,7 +156,7 @@ public class TrustEvaluator {
 	}
 	
 	private boolean ready(Information info, HashSet<Information> toVisit) {
-		for (InformationLink informationLink : info.getTargetedBy2()) {
+		for (InformationLink informationLink : info.getTargetedBy()) {
 			if (toVisit.contains(informationLink.getSource()))
 				return false;
 		}
@@ -171,7 +171,7 @@ public class TrustEvaluator {
 	
 	// relies on current trust 
 	private float argumentationScore(Information info) {
-		return (float) info.getTargetedBy2().stream()
+		return (float) info.getTargetedBy().stream()
 			.mapToDouble(link -> score(link))
 			.sum();
 	}
@@ -216,10 +216,10 @@ public class TrustEvaluator {
 	 */
 	private float checkRecursive(InformationLink link, int counterWasAPreviousAttack) { // NEW: (recursively) calculate the trust of recursive edges
 		SaveEdgeWeight edgeWeight = new SaveEdgeWeight();
-		if (link.getTargetedBy2().isEmpty()) {
+		if (link.getTargetedBy().isEmpty()) {
 			return 1.0f;
 		} else {
-			EList<InformationLink> recLinks = link.getTargetedBy2();
+			EList<InformationLink> recLinks = link.getTargetedBy();
 			recLinks.forEach(e -> {
 				switch(e.getType()) {
 					case SUPPORT:

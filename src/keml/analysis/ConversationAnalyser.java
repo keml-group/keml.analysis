@@ -162,7 +162,7 @@ public class ConversationAnalyser {
 		});
 		// get all recursive information links
 		links.forEach(e ->{
-			if (e.getTarget2() instanceof InformationLink)
+			if (e.getTarget() instanceof InformationLink)
 				recLinks.add(e);
 		});
 		return recLinks.size();

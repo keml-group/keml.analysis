@@ -180,14 +180,14 @@ public class WorkbookController {
 			Cell msg = r.createCell(1);
 			msg.setCellValue(pre.getMessage());
 			colorByOrigin(msg, false);
-			r.createCell(2).setCellValue(pre.getTargetedBy2().size());
+			r.createCell(2).setCellValue(pre.getTargetedBy().size());
 			r.createCell(3).setCellValue(pre.getRepeatedBy().size());
-			//Float fTi = pre.getFeltTrustImmediately();
-			//Float fTa = pre.getFeltTrustAfterwards();
-			//float fTiCellValue = fTi != null ? fTi.floatValue() : Float.NaN;
-			//float fTaCellValue = fTa != null ? fTa.floatValue() : Float.NaN;
-			//setAndColorByValue(r.createCell(4), fTiCellValue);
-			//setAndColorByValue(r.createCell(5), fTaCellValue);
+			Float fTi = pre.getFeltTrustImmediately();
+			Float fTa = pre.getFeltTrustAfterwards();
+			float fTiCellValue = fTi != null ? fTi.floatValue() : Float.NaN;
+			float fTaCellValue = fTa != null ? fTa.floatValue() : Float.NaN;
+			setAndColorByValue(r.createCell(4), fTiCellValue);
+			setAndColorByValue(r.createCell(5), fTaCellValue);
 		}
 		for (int i = 0; i < newInfos.size(); i++) {
 			NewInformation info = newInfos.get(i);
@@ -199,14 +199,14 @@ public class WorkbookController {
 			Cell msg = r.createCell(1);
 			msg.setCellValue(info.getMessage());
 			colorByOrigin(msg, info.getSourceConversationPartner().getName().equals("LLM"));
-			r.createCell(2).setCellValue(info.getTargetedBy2().size());
+			r.createCell(2).setCellValue(info.getTargetedBy().size());
 			r.createCell(3).setCellValue(info.getRepeatedBy().size());
-			//Float fTi = info.getFeltTrustImmediately();
-			//Float fTa = info.getFeltTrustAfterwards();
-			//float fTiCellValue = fTi != null ? fTi.floatValue() : Float.NaN;
-			//float fTaCellValue = fTa != null ? fTa.floatValue() : Float.NaN;
-			//setAndColorByValue(r.createCell(4), fTiCellValue);
-			//setAndColorByValue(r.createCell(5), fTaCellValue);
+			Float fTi = info.getFeltTrustImmediately();
+			Float fTa = info.getFeltTrustAfterwards();
+			float fTiCellValue = fTi != null ? fTi.floatValue() : Float.NaN;
+			float fTaCellValue = fTa != null ? fTa.floatValue() : Float.NaN;
+			setAndColorByValue(r.createCell(4), fTiCellValue);
+			setAndColorByValue(r.createCell(5), fTaCellValue);
 		}
 	}
 
