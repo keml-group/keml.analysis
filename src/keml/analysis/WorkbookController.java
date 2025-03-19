@@ -271,7 +271,9 @@ public class WorkbookController {
 	}
 
 	private void setAndColorByValue(Cell cell, float value) {
-		cell.setCellValue(value);
+		String formattedValue = String.format("%.2f", value);
+		//cell.setCellValue(value);
+		cell.setCellValue(formattedValue); // NEW: I do not find another way to round the trust (I think its a Java thing)
 		if (value > 0.0f) {
 			cell.setCellStyle(trustStyle);
 		} else if (value < 0.0f) {
