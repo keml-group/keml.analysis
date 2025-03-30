@@ -4,7 +4,7 @@
 -----------------------
 This project analyses KEML files statistically. For each KEML file it produces:
 1) [General Statistics](#general-statistics)
-2) [Argumentation data](#argumentation-data)
+2) [Logical Argumentation](#logical-argumentation)
 3) [Trust Scores](#trust-scores)
 
 ## Installation
@@ -23,7 +23,7 @@ In **analysis**, each filename starts with a prefix _pre_ that is equal to the K
 
 Currently, three types of statistics are generated:
 1) [General Statistics](#general-statistics)
-2) [Argumentation data](#argumentation-data)
+2) [Logical Argumentation](#logical-argumentation)
 3) [Trust Scores](#trust-scores)
 
 ### General Statistics
@@ -36,7 +36,7 @@ The Knowledge Part counts PreKnowledge and New information, split into Facts and
 ![Example General Statistics](doc/laf_example-general-csv.PNG)
 
 
-### Argumentation Data
+### Logical Argumentation
 Argumentation data are stored under _pre_-arguments.csv.
 
 This CSV file consists of multiple relevant data to the state of the analysied converastion:

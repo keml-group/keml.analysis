@@ -53,18 +53,7 @@ public class ArgumentTree {
 	}
 	
 	
-	/**
-	 * a <b>static</b> method that creates a String representation of a given {@link ArgumentTree}
-	 * @param node {@link ArgumentTree} to be represented
-	 * @param prefix String prefix to facilitate recursive call. Should be empty ("") during first call
-	 * @param literals2String Map of literals and their associated String symbol. See {@link LAFConversationAnalyser#literals2String}
-	 * @return String representation of a given tree
-	 */
-	public static String printTree(ArgumentTree node, String prefix, Map<Literal, String> literals2String) {
-	    StringBuilder tree = new StringBuilder();
-	    printTreeHelper(node, prefix, literals2String, tree);
-	    return tree.toString();
-	}
+
 	
 	
 	/**
@@ -74,12 +63,14 @@ public class ArgumentTree {
 	 * @param literals2String Map of literals and their associated String symbol. See {@link LAFConversationAnalyser#literals2String}
 	 * @param tree {@link StringBuilder} of the tree constructed so far.
 	 */
-	private static void printTreeHelper(ArgumentTree node, String prefix, Map<Literal, String> literals2String, StringBuilder tree) {
+	public static String printTree(ArgumentTree node, String prefix, Map<Literal, String> literals2String, StringBuilder tree) {
 	    tree.append(prefix).append("└── ").append(LogicArgument.asString(node.getRoot(), literals2String)).append("\n");
 	    
 	    for (int i = 0; i < node.getChildren().size(); i++) {
-	        printTreeHelper(node.getChildren().get(i), prefix + "    ", literals2String, tree);
+	        printTree(node.getChildren().get(i), prefix + "    ", literals2String, tree);
 	    }
+	    
+	    return tree.toString();
 	}
 
 }

@@ -339,7 +339,7 @@ public class LAFConversationAnalyser {
 				continue;
 			
 			csvPrinter.printRecord((Object[]) new String[]{
-					ArgumentTree.printTree(undercutTrees.get(arg), "", literals2String).strip()
+					ArgumentTree.printTree(undercutTrees.get(arg), "", literals2String, new StringBuilder()).strip()
 					});
 
 		}
