@@ -52,16 +52,16 @@ public class ArgumentTree {
 		return children;
 	}
 	
-	
 
 	
-	
 	/**
-	 * Helper method for {@link ArgumentTree#printTree} to facilitate recursive calls.
-	 * @param  node {@link ArgumentTree} to be represented
-	 * @param prefix String prefix to facilitate recursive call.
+	 * a <b>static</b> method that creates a String representation of a given {@link ArgumentTree}
+	 * @param node {@link ArgumentTree} to be represented
+	 * @param prefix String prefix to facilitate recursive call. Should be empty ("") during first call
 	 * @param literals2String Map of literals and their associated String symbol. See {@link LAFConversationAnalyser#literals2String}
-	 * @param tree {@link StringBuilder} of the tree constructed so far.
+	 * @param tree {@link StringBuilder} of the tree constructed so far (should be empty initially)
+	 * @return String representation of a given tree
+
 	 */
 	public static String printTree(ArgumentTree node, String prefix, Map<Literal, String> literals2String, StringBuilder tree) {
 	    tree.append(prefix).append("└── ").append(LogicArgument.asString(node.getRoot(), literals2String)).append("\n");
