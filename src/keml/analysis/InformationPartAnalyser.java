@@ -52,6 +52,7 @@ public class InformationPartAnalyser {
 							countAttacks[index][partnerIndex] +=1;
 						}
 					} else {
+						// NEW: counts recursive attacks and supports
 						if (link.getTarget() instanceof InformationLink) {
 							InformationLink i = (InformationLink) link.getTarget();
 							int partnerIndex = getIndexOfInfoLink(i);
@@ -61,53 +62,9 @@ public class InformationPartAnalyser {
 							if (link.getType() == InformationLinkType.ATTACK || link.getType() == InformationLinkType.STRONG_ATTACK) {
 								countRecAttacks[index][partnerIndex] +=1;
 							}
-						} //TODO JP
+						}
 					}
 					
-
-					// todo analyse supplements?
-				});
-			});
-		
-		String[][] text = combineMatrices(countAttacks, countSupports,countRecAttacks, countRecSupports);
-		writeMatrix(text, csvPrinter);	
-	}
-	
-	public void writeInformationConnections2(CSVPrinter csvPrinter) throws IOException { //JP neuer tabellen eintragi
-		//matrix holds fact and instruction entry for the author (for pre-knowledge) and each partner
-		int[][] countAttacks = new int[dimension][dimension];
-		int[][] countSupports = new int[dimension][dimension];
-		int[][] countRecAttacks = new int[dimension][dimension]; //NEW: matrix that saves number of recursive attacks
-		int[][] countRecSupports = new int[dimension][dimension]; //NEW: matrix that saves number of recursive supports
-		
-		Stream.concat(newInfos.stream(), preKnowledge.stream())
-			.forEach(info -> {
-				int index = getIndexOfInfo(info);
-				info.getCauses().forEach(link -> {
-					if (link.getTarget() instanceof Information) { //NEW: because of new meta model
-						Information i = (Information) link.getTarget();
-						int partnerIndex = getIndexOfInfo(i);
-						if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
-							countSupports[index][partnerIndex] +=1;
-						}
-						if (link.getType() == InformationLinkType.ATTACK || link.getType() == InformationLinkType.STRONG_ATTACK) {
-							countAttacks[index][partnerIndex] +=1;
-						}
-					} else { //NEW: count recursive edges
-						if (link.getTarget() instanceof InformationLink) {
-							InformationLink i = (InformationLink) link.getTarget();
-							int partnerIndex = getIndexOfInfoLink(i);
-							if (link.getType() == InformationLinkType.SUPPORT || link.getType() == InformationLinkType.STRONG_SUPPORT) {
-								countRecSupports[index][partnerIndex] +=1;
-							}
-							if (link.getType() == InformationLinkType.ATTACK || link.getType() == InformationLinkType.STRONG_ATTACK) {
-								countRecAttacks[index][partnerIndex] +=1;
-							}
-						} //TODO JP
-					}
-					
-
-					// todo analyse supplements?
 				});
 			});
 		

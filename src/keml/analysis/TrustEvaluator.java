@@ -197,7 +197,6 @@ public class TrustEvaluator {
 			break;	
 		}
 		// TODO should we ignore nodes that have negative trust or let them work in opposite direction? Currently opposite:
-		float i = checkRecursive(link,1);
 		return edgeWeight*link.getSource().getCurrentTrust() *checkRecursive(link,1); // NEW: multiply link trust with recursive link trust
 	}
 	
@@ -221,18 +220,21 @@ public class TrustEvaluator {
 		} else {
 			EList<InformationLink> recLinks = link.getTargetedBy();
 			recLinks.forEach(e -> {
+				/* the number of the edge types are intuitively derived (strong supports doubles the effect) since in the literature recursive attacks cancel out attacks
+				 * the number of counterWasAPreviousAttack is just for the special case of recursive attacks targeting recursive attacks and alternates between -1 (this recursive attack
+				 * weakens the effect of its target) and 1 (this recursive attack decreases the weakening effect of its target)*/
 				switch(e.getType()) {
 					case SUPPORT:
-						edgeWeight.number = 1.33f * checkRecursive(e,absoluteValue(counterWasAPreviousAttack)); // increase of 1/3 so that SUPPORT*ATTACK = 1
+						edgeWeight.number = (4.0f/3.0f) * checkRecursive(e,absoluteValue(counterWasAPreviousAttack)); // increase of 1/3 so that SUPPORT*ATTACK = 1
 						break;
 					case STRONG_SUPPORT:
 						edgeWeight.number = 2.0f * checkRecursive(e,absoluteValue(counterWasAPreviousAttack));
 						break;
 					case ATTACK:
 						if (counterWasAPreviousAttack > 0) 
-							edgeWeight.number = 0.75f * checkRecursive(e,counterWasAPreviousAttack*(-1));
+							edgeWeight.number = (3.0f/4.0f) * checkRecursive(e,counterWasAPreviousAttack*(-1));
 						else 
-							edgeWeight.number = 1.17f * checkRecursive(e,counterWasAPreviousAttack*(-1));
+							edgeWeight.number = (7.0f/6.0f) * checkRecursive(e,counterWasAPreviousAttack*(-1));
 						break;
 					case STRONG_ATTACK:
 						if (counterWasAPreviousAttack > 0) {
