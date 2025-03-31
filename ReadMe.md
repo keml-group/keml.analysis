@@ -29,7 +29,7 @@ General statistics are stored under $pre$-general.csv.
 
 This CSV file holds a Message Part and a Knowledge Part where it gives statistics per Conversation Partner. 
 The Message Part gives counts for sends and receives, as well as interruptions.
-The Knowledge Part counts PreKnowledge and New information, split into Facts and Instructions. It also counts repetitions.
+The Knowledge Part counts PreKnowledge and New information, split into Facts and Instructions. It also counts repetitions and recusrsive edges.
 
 ![Example General Statistics](doc/example-general-csv.png)
 
@@ -37,7 +37,7 @@ The Knowledge Part counts PreKnowledge and New information, split into Facts and
 ### Argumentation Statistics
 Argumentation statistics are stored under _pre_-arguments.csv.
 
-This CSV file consists of a table that counts attacks and supports between facts (F) and instructions (I) of all conversation partners (including the human author).
+This CSV file consists of a table that counts attacks, supports, recursive attacks and recursive supports between facts (F) and instructions (I) of all conversation partners (including the human author).
 
 ![Example Argumentation Statistics](doc/example-arguments-csv.png)
 
