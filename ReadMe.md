@@ -29,15 +29,15 @@ General statistics are stored under $pre$-general.csv.
 
 This CSV file holds a Message Part and a Knowledge Part where it gives statistics per Conversation Partner. 
 The Message Part gives counts for sends and receives, as well as interruptions.
-The Knowledge Part counts PreKnowledge and New information, split into Facts and Instructions. It also counts repetitions.
+The Knowledge Part counts PreKnowledge and New information, split into Facts and Instructions. It also counts repetitions and recursive edges.
 
-![Example General Statistics](doc/example-general-csv-2.png)
+![Example General Statistics](doc/example-general-csv.png)
 
 
 ### Argumentation Statistics
 Argumentation statistics are stored under _pre_-arguments.csv.
 
-This CSV file consists of a table that counts attacks and supports between facts (F) and instructions (I) of all conversation partners (including the human author).
+This CSV file consists of a table that counts attacks, supports, recursive attacks and recursive supports between facts (F) and instructions (I) of all conversation partners (including the human author).
 
 ![Example Argumentation Statistics](doc/example-arguments-csv.png)
 
@@ -76,9 +76,31 @@ The repetition score can only contribute positively to our trust and we have $T_
 
 The argumentative trust $T_{arg}(i)$ is computed from all trust scores $T(j)$ where _j_ has an argumentative impact (that is an immediate connection $j$->$i$) on _i_:
 
-$T_{arg}(i) = \sum_{j\in impact(i)} infl(j,i)*T(j)$
+$T_{arg}(i) = \sum_{j\in impact(i)} infl(j,i)*T(j)*T_{rec}(v)$
 
-Here, $infl(j,i)$ is defined by the type of edge $j$->$i$ as -1, -0.5, 0.5, 1 for strong attacks, attacks, supports and strong supports, respectively.
+Here, $infl(j,i)$ is defined by the type of edge $j$->$i$ as -1, -0.5, 0.5, 1 for strong attacks, attacks, supports and strong supports, respectively. The variable v is the edge between j and i (v = (j,i));
+
+#### Recursive Trust
+
+The recursive trust $T_{rec}(v)$ is computed from $T_{recWeights}(v,r)$ of all r that pointing to $v$. Additionally, $r$ changes the effect of $v$ on a node $i$, which is computed by T_{recWeights}(v,r).
+
+$$
+T_{rec}(v) = \prod_{r \in R} \left( T_{recWeights}(v, r) \cdot T_{rec}(r) \right)
+$$
+
+with $R$ as set of all recursive edges pointing to $v$
+
+$$
+T_{recWeights}(v,r) =
+\begin{cases} 
+2.0, & \text{if recursive edge pointing to }  r \text{ is a strong support} \\
+1.5, & \text{if recursive edge pointing to }  r \text{ is a support} \\
+0.75, & \text{if recursive edge pointing to }  r \text{ is a attack} \\
+0.5, & \text{if recursive edge pointing to }  r \text{ is a strong attack}
+\end{cases}
+$$
+
+In the special case of a recursive attack $r2$ attacking a recursive attack $r1$, $r2$ weakens the weakening factor of $r1$. For example, $r1$ is a strong recursive attack which halves the effect of its target (*0.5). Now its attacked by a strong recursive attack $r2$ which halves the effect of $r1$. This results in $r1$ having an effect of *0.75 on its target.
 
 #### Initial Trust
 
