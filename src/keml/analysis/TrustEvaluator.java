@@ -235,12 +235,14 @@ public class TrustEvaluator {
 							edgeWeight.number = (3.0f/4.0f) * checkRecursive(e,counterWasAPreviousAttack*(-1));
 						else 
 							edgeWeight.number = (7.0f/6.0f) * checkRecursive(e,counterWasAPreviousAttack*(-1));
+						// if r2(weight of 7/6) attacks r1(weight of 3/4 = 6/8) (r1, r2 are rec attacks) it halves r1 effect on its target (6/8)*(7/6)=(7/8)
 						break;
 					case STRONG_ATTACK:
 						if (counterWasAPreviousAttack > 0) {
 							edgeWeight.number = 0.5f * checkRecursive(e,counterWasAPreviousAttack*(-1));
 						} else {
 							edgeWeight.number = 1.5f * checkRecursive(e,counterWasAPreviousAttack*(-1));
+							// if r2(weight of 1.5) attacks r1(weight of 0.5) (r1, r2 are rec attacks) it halves r1 effect on its target 0.5*1.5=0.75
 						}
 						break;
 					case SUPPLEMENT:
