@@ -82,7 +82,7 @@ public class ConversationAnalyser {
 			writeForPartners(newInfos.get(InformationType.INSTRUCTION), "Instructions", csvPrinter, 0L, true);
 			// csvPrinter.printRecord("Trust:");
 			csvPrinter.printRecord("Repetitions", countRepetitions());
-			csvPrinter.printRecord("RecAttacks", countRecLinks()); // NEW: new entry for number of recursive edges
+			csvPrinter.printRecord("RecEdges", countRecLinks()); // NEW: new entry for number of recursive edges
 			csvPrinter.flush();
 		}
 		System.out.println("Wrote general analysis to " + path);
