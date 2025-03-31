@@ -29,7 +29,7 @@ General statistics are stored under $pre$-general.csv.
 
 This CSV file holds a Message Part and a Knowledge Part where it gives statistics per Conversation Partner. 
 The Message Part gives counts for sends and receives, as well as interruptions.
-The Knowledge Part counts PreKnowledge and New information, split into Facts and Instructions. It also counts repetitions and recusrsive edges.
+The Knowledge Part counts PreKnowledge and New information, split into Facts and Instructions. It also counts repetitions and recursive edges.
 
 ![Example General Statistics](doc/example-general-csv.png)
 
