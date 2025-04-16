@@ -1,6 +1,10 @@
 package keml.analysis;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Locale;
 
 import org.apache.commons.io.FilenameUtils;
@@ -11,18 +15,22 @@ import keml.io.KemlFileHandler;
 
 public class AnalysisProvider {
 
-	public static void runAnalysis(File json) throws Exception {
-		String source = json.getAbsolutePath();
-		Conversation conv = new KemlFileHandler().loadKemlJSON(source);
-		String basePath = "../keml.sample/introductoryExamples/analysis/test//"
-				+ FilenameUtils.removeExtension(json.getName());
-		new ConversationAnalyser(conv).createCSVs(basePath);
+	public static String runAnalysis(Path json) throws IOException {
+		Path source = json.toAbsolutePath();
+		Conversation conv = new KemlFileHandler().loadKemlJSON(source.toString());
+		String fileName = FilenameUtils.removeExtension(source.getFileName().toString());
+		String basePath = "../keml.sample/introductoryExamples/analysis/" + fileName + "/";
+		Path dir = Paths.get(basePath);
+		Files.createDirectories(dir);
+		String basePathFile = basePath + fileName;
+		new ConversationAnalyser(conv).createCSVs(basePathFile);
 		LocaleUtil.setUserLocale(Locale.US);
 		for (int i = 2; i <= 10; i++) {
 			TrustEvaluator trusty = new TrustEvaluator(conv, i);
-			trusty.writeRowAnalysis(basePath + "-w" + i + "-",
+			trusty.writeRowAnalysis(basePathFile + "-w" + i + "-",
 					TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()), 1.0F);
 		}
+		return basePath;
 	}
 
 	public static void main(String[] args) throws Exception {
