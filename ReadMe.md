@@ -93,7 +93,7 @@ We write $T_{init}(P)$ for { $T_{init}(i) | i$ from $p \in P$} and $T_{init}(LLM
 
 ### Further Analysis
 
-When running the server execution mode, setting the flag runFullAnalysis to true in the runtime arguments, enables an additonal analysis that provides statistics and graphics about the differences between the felt and the calculated trust. This analysis is done by a python script. Further info can be seen in [keml.py-analysis](src/keml.analysis/py/README.md).
+When running the server execution mode, setting the flag runFullAnalysis to true in the runtime arguments, enables an additonal analysis that provides statistics and graphics about the differences between the felt and the calculated trust. This analysis is done by a python script. Further info can be seen in [keml.py-analysis](src/keml/analysis/py/README.md).
 
 
 ## License
