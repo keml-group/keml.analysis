@@ -15,11 +15,11 @@ import keml.io.KemlFileHandler;
 
 public class AnalysisProvider {
 
-	public static String runAnalysis(Path json) throws IOException {
+	public static String runAnalysis(Path json, boolean runFullAnalysis, String path) throws IOException {
 		Path source = json.toAbsolutePath();
 		Conversation conv = new KemlFileHandler().loadKemlJSON(source.toString());
 		String fileName = FilenameUtils.removeExtension(source.getFileName().toString());
-		String basePath = "../keml.sample/introductoryExamples/analysis/" + fileName + "/";
+		String basePath = path + "/analysis/" + fileName + "/";
 		Path dir = Paths.get(basePath);
 		Files.createDirectories(dir);
 		String basePathFile = basePath + fileName;
@@ -29,6 +29,12 @@ public class AnalysisProvider {
 			TrustEvaluator trusty = new TrustEvaluator(conv, i);
 			trusty.writeRowAnalysis(basePathFile + "-w" + i + "-",
 					TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()), 1.0F);
+		}
+		if (runFullAnalysis) {
+			boolean success = PythonExecutor.runPythonScript(fileName, path);
+			if (!success) {
+				throw new IOException("Failed to execute python script");
+			}
 		}
 		return basePath;
 	}
