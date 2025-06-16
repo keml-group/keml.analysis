@@ -8,12 +8,15 @@ import java.util.List;
 
 public class PythonExecutor {
 
-	public static boolean runPythonScript(String dirName, String path) {
+	public static boolean runPythonScript(String dirName, String path, boolean jarExecution) {
 		try {
 			List<String> commands = new ArrayList<>();
 			commands.add("python3");
-			commands.add("/app/python-scripts/main.py");
-//			commands.add("../keml.analysis/src/keml/analysis/py/main.py");
+			if (jarExecution) {
+				commands.add("/app/python-scripts/main.py");
+			} else {
+				commands.add("../keml.analysis/src/keml/analysis/py/main.py");
+			}		
 			commands.add(dirName);
 			ProcessBuilder pb = new ProcessBuilder(commands);
 			pb.redirectErrorStream(true);

@@ -15,7 +15,7 @@ import keml.io.KemlFileHandler;
 
 public class AnalysisProvider {
 
-	public static String runAnalysis(Path json, boolean runFullAnalysis, String path) throws IOException {
+	public static String runAnalysis(Path json, boolean runFullAnalysis, String path, boolean jarExecution) throws IOException {
 		Path source = json.toAbsolutePath();
 		Conversation conv = new KemlFileHandler().loadKemlJSON(source.toString());
 		String fileName = FilenameUtils.removeExtension(source.getFileName().toString());
@@ -31,7 +31,7 @@ public class AnalysisProvider {
 					TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()), 1.0F);
 		}
 		if (runFullAnalysis) {
-			boolean success = PythonExecutor.runPythonScript(fileName, path);
+			boolean success = PythonExecutor.runPythonScript(fileName, path, jarExecution);
 			if (!success) {
 				throw new IOException("Failed to execute python script");
 			}
