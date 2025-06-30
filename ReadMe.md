@@ -27,7 +27,7 @@ Instead of running the analysis directly on your device the project also offers 
 
 The request must be sent as a HTTP POST request to \<IP-address\>:8080/api/process-json?runFurtherAnalysis=\<bool\> with a JSON body consisting of the content of the JSON file that should be analyzed. The flag runFurtherAnalysis is a boolean value having the same effect as described before.
 If successful, the request returns a ZIP file including all the files that resulted from the analysis of the sent JSON. The returned file has the name input_\<timestamp\>.zip.
-The first runtime argument when starting the application is the execution mode (STANDARD, JAR, DOCKER_JAR). When no argument is given STANDARD is used meaning that the program assumes it has been started as a Spring Boot App in Eclipse. When running the app with Docker the Dockerfile already includes the correct execution mode.
+The first runtime argument when starting the application is the execution mode (STANDARD, JAR, DOCKER_JAR). When no argument is given STANDARD is used meaning that the program assumes it has been started as a Spring Boot App in Eclipse. When running the app with Docker the Dockerfile already includes the correct execution mode. Using an argument that does not equal one of the three named before results in the application immediately shutting down.
 The second optional argument is the path of where the files are stored temporarily before being sent to the client. If no second argument is given the app again uses keml.sample/introductoryExamples as a base path assuming as before that the project is located on the same level as keml.sample.
 
 ## Output
