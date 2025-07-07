@@ -15,7 +15,7 @@ def main():
         if not os.path.exists(f'{user_dir_path}/stats_{file_name}'):
             os.mkdir(f'{user_dir_path}/stats_{file_name}')
         for ana_file in os.listdir(user_dir_path):     
-            if os.path.isdir(f'{user_dir_path}/{ana_file}') or os.path.splitext(ana_file)[1] == ".csv":
+            if os.path.isdir(f'{user_dir_path}/{ana_file}') or os.path.splitext(ana_file)[1] == ".csv" or not ana_file.startswith(file_name):
                 continue
             f_s = os.path.join(user_dir_path, ana_file)          
             h_t = f'{user_dir_path}/stats_{file_name}/{os.path.splitext(ana_file)[0]}'
