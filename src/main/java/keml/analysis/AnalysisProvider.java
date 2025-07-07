@@ -50,12 +50,12 @@ public class AnalysisProvider {
 			sourceFolder = new File(folder + "/keml/");
 			file = sourceFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"))[0];
 		} else if (args.length == 1){
-			runFurtherAnalysis = Boolean.getBoolean(args[0]);
+			runFurtherAnalysis = Boolean.parseBoolean(args[0]);
 			folder = "../keml.sample/introductoryExamples";
 			sourceFolder = new File(folder + "/keml/");
 			file = sourceFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"))[0];
 		} else if (args.length == 2){
-			runFurtherAnalysis = Boolean.getBoolean(args[0]);
+			runFurtherAnalysis = Boolean.parseBoolean(args[0]);
 			folder = args[1];
 			sourceFolder = new File(folder + "/keml/");
 			file = sourceFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"))[0];
