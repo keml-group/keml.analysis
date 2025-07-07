@@ -16,28 +16,28 @@ import keml.io.KemlFileHandler;
 
 public class AnalysisProvider {
 
-	public static String runAnalysis(Path json, boolean runFurtherAnalysis, String path, ExecutionMode executionMode) throws IOException {
+	public static String runAnalysis(Path json, boolean runFurtherAnalysis, String basePath, ExecutionMode executionMode) throws IOException {
 		Path source = json.toAbsolutePath();
 		Conversation conv = new KemlFileHandler().loadKemlJSON(source.toString());
 		String fileName = FilenameUtils.removeExtension(source.getFileName().toString());
-		String basePath = path + "/analysis/" + fileName + "/";
-		Path dir = Paths.get(basePath);
+		String dirPath = basePath + "/analysis/" + fileName;
+		Path dir = Paths.get(dirPath);
 		Files.createDirectories(dir);
-		String basePathFile = basePath + fileName;
-		new ConversationAnalyser(conv).createCSVs(basePathFile);
+		String filePath = dirPath + "/" + fileName;
+		new ConversationAnalyser(conv).createCSVs(filePath);
 		LocaleUtil.setUserLocale(Locale.US);
 		for (int i = 2; i <= 10; i++) {
 			TrustEvaluator trusty = new TrustEvaluator(conv, i);
-			trusty.writeRowAnalysis(basePathFile + "-w" + i + "-",
+			trusty.writeRowAnalysis(filePath + "-w" + i + "-",
 					TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()), 1.0F);
 		}
 		if (runFurtherAnalysis) {
-			boolean success = PythonExecutor.runPythonScript(fileName, path, executionMode);
+			boolean success = PythonExecutor.runPythonScript(dirPath, fileName, executionMode);
 			if (!success) {
 				throw new IOException("Failed to execute python script");
 			}
 		}
-		return basePath;
+		return dirPath;
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -60,7 +60,7 @@ public class AnalysisProvider {
 			sourceFolder = new File(folder + "/keml/");
 			file = sourceFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"))[0];
 		} else {
-			runFurtherAnalysis = Boolean.getBoolean(args[0]);
+			runFurtherAnalysis = Boolean.parseBoolean(args[0]);
 			folder = args[1];
 			sourceFolder = new File(folder + "/keml/");
 			file = new File(sourceFolder.getName() + args[2]);

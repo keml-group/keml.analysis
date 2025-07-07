@@ -10,7 +10,8 @@ import keml.analysis_server.utils.ExecutionMode;
 
 public class PythonExecutor {
 
-	public static boolean runPythonScript(String dirName, String path, ExecutionMode executionMode) {
+	public static boolean runPythonScript(String filePath, String fileName, ExecutionMode executionMode) {
+		BufferedReader reader = null;
 		try {
 			List<String> commands = new ArrayList<>();
 			commands.add("python3");
@@ -25,11 +26,12 @@ public class PythonExecutor {
 				commands.add("/app/python-scripts/main.py");
 				break;
 			}		
-			commands.add(dirName);
+			commands.add(filePath);
+			commands.add(fileName);
 			ProcessBuilder pb = new ProcessBuilder(commands);
 			pb.redirectErrorStream(true);
 			Process process = pb.start();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			String line;
 			while ((line = reader.readLine()) != null) {
 				System.out.println(line);
@@ -39,8 +41,15 @@ public class PythonExecutor {
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 			return false;
+		} finally {
+			try {
+				if (reader != null) {
+					reader.close();
+				}				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-
 	}
 
 }

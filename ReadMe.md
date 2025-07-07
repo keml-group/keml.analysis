@@ -19,7 +19,7 @@ All output files are stored in the folder **analysis**.
 
 ## Server running
 
-Instead of running the analysis directly on your device the project also offers the possiblity to run as a server so that you can access it via REST-API. There are 3 possible ways of running the Spring Boot Application server so that you can access it via REST-API.:
+Instead of running the analysis directly on your device the project also offers the possiblity to run as a server so that you can access it via REST-API. There are 3 possible ways of running the Spring Boot Application server so that you can access it via REST-API:
 
 - **Spring Boot App:** With the Spring Tools plugin installed in your Eclipse IDE you can run the KemlAnalysisServerApplication class as a Spring Boot App directly
 - **Running JAR directly:** With the [KEML](https://github.com/keml-group/keml) and [KEML IO](https://github.com/keml-group/keml.io) projects installed in your local Maven repository, you can build a JAR with Maven that is saved in the target folder and can be executed from there with "java -jar kemlanalysisserver.jar JAR"

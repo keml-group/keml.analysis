@@ -20,10 +20,10 @@ public class Main {
 		if (args.length == 0) {
 			folder = "../keml.sample/introductoryExamples";
 		} else if (args.length == 1){
-			runFurtherAnalysis = Boolean.getBoolean(args[0]);
+			runFurtherAnalysis = Boolean.parseBoolean(args[0]);
 			folder = "../keml.sample/introductoryExamples";
 		} else {
-			runFurtherAnalysis = Boolean.getBoolean(args[0]);
+			runFurtherAnalysis = Boolean.parseBoolean(args[0]);
 			folder = args[1];			
 		}
 
@@ -57,7 +57,7 @@ public class Main {
 							TrustEvaluator.standardTrustConfigurations(conv.getConversationPartners()), 1.0F);
 				}
 				if (runFurtherAnalysis) {
-					boolean success = PythonExecutor.runPythonScript(fileName, folder, ExecutionMode.STANDARD);
+					boolean success = PythonExecutor.runPythonScript(targetFolder.getAbsolutePath(), fileName, ExecutionMode.STANDARD);
 					if (!success) {
 						throw new IOException("Failed to execute python script");
 					}
