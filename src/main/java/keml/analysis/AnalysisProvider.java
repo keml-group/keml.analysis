@@ -63,7 +63,7 @@ public class AnalysisProvider {
 			runFurtherAnalysis = Boolean.parseBoolean(args[0]);
 			folder = args[1];
 			sourceFolder = new File(folder + "/keml/");
-			file = new File(sourceFolder.getName() + args[2]);
+			file = new File(sourceFolder.getAbsolutePath() + args[2]);
 		}
 		runAnalysis(file.toPath(), runFurtherAnalysis, folder, ExecutionMode.STANDARD);
 	}
