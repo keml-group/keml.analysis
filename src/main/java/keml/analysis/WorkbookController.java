@@ -15,6 +15,7 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.RegionUtil;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
@@ -43,6 +44,8 @@ public class WorkbookController {
 	XSSFCellStyle factStyle;
 	XSSFCellStyle origLLMStyle;
 	XSSFCellStyle origOtherStyle;
+	XSSFCellStyle targetStyle;
+	XSSFCellStyle repeatedStyle;
 
 	// data properties
 	int firstFreeColumn = 0;
@@ -128,44 +131,60 @@ public class WorkbookController {
 		trustStyle = wb.createCellStyle();
 		trustStyle.setDataFormat(floatStyle.getDataFormat());
 		trustStyle.setAlignment(HorizontalAlignment.CENTER);
+		trustStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		trustStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#339966"), null));
 		trustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 		// *************** Distrust *************
 		distrustStyle = wb.createCellStyle();
 		trustStyle.setDataFormat(floatStyle.getDataFormat());
 		distrustStyle.setAlignment(HorizontalAlignment.CENTER);
+		distrustStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		distrustStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FF5F5F"), null));
 		distrustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 		// *************** neutral about trust *************
 		neutTrustStyle = wb.createCellStyle();
-		trustStyle.setDataFormat(floatStyle.getDataFormat());
+		neutTrustStyle.setDataFormat(floatStyle.getDataFormat());
 		neutTrustStyle.setAlignment(HorizontalAlignment.CENTER);
+		neutTrustStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		neutTrustStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
 		neutTrustStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 		// ************** isFact *************
 		factStyle = wb.createCellStyle();
 		factStyle.setAlignment(HorizontalAlignment.CENTER);
+		factStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		factStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#99CC00"), null));
 		factStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		// ************* is Instruction **********
 		instructionStyle = wb.createCellStyle();
 		instructionStyle.setAlignment(HorizontalAlignment.CENTER);
+		instructionStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 		instructionStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FFCC00"), null));
 		instructionStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		// *************** origin LLM style**************
 		origLLMStyle = wb.createCellStyle();
+		origLLMStyle.setWrapText(true);
 		origLLMStyle.setAlignment(HorizontalAlignment.LEFT);
 		origLLMStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#CCFFFF"), null));
 		origLLMStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		// *************** origin Other style**************
 		origOtherStyle = wb.createCellStyle();
+		origOtherStyle.setWrapText(true);
 		origOtherStyle.setAlignment(HorizontalAlignment.LEFT);
 		origOtherStyle.setFillForegroundColor(new XSSFColor(java.awt.Color.decode("#FFFF99"), null));
 		origOtherStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
+		
+		// *************** target style**************
+		targetStyle = wb.createCellStyle();
+		targetStyle.setAlignment(HorizontalAlignment.CENTER);
+		targetStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		
+		// *************** repeated style**************
+		repeatedStyle = wb.createCellStyle();
+		repeatedStyle.setAlignment(HorizontalAlignment.CENTER);
+		repeatedStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 	}
 
 	public void initialize(List<NewInformation> newInfos, List<PreKnowledge> preKnowledge) {
@@ -178,16 +197,22 @@ public class WorkbookController {
 			t.setCellValue(-1);
 			colorByIsInstruction(t, pre.isIsInstruction());
 			Cell msg = r.createCell(1);
-			msg.setCellValue(pre.getMessage());
+		    String wrappedPreMsg = wrapTextAtWordBoundary(pre.getMessage(), 50);
+		    msg.setCellValue(wrappedPreMsg);
 			colorByOrigin(msg, false);
-			r.createCell(2).setCellValue(pre.getTargetedBy().size());
-			r.createCell(3).setCellValue(pre.getRepeatedBy().size());
+			Cell target = r.createCell(2);
+			target.setCellValue(pre.getTargetedBy().size());
+			target.setCellStyle(targetStyle);
+			Cell repeated = r.createCell(3);
+			repeated.setCellValue(pre.getRepeatedBy().size());
+			repeated.setCellStyle(repeatedStyle);
 			Float fTi = pre.getFeltTrustImmediately();
 			Float fTa = pre.getFeltTrustAfterwards();
 			float fTiCellValue = fTi != null ? fTi.floatValue() : Float.NaN;
 			float fTaCellValue = fTa != null ? fTa.floatValue() : Float.NaN;
 			setAndColorByValue(r.createCell(4), fTiCellValue);
 			setAndColorByValue(r.createCell(5), fTaCellValue);
+			r.setHeight((short)-1);
 		}
 		for (int i = 0; i < newInfos.size(); i++) {
 			NewInformation info = newInfos.get(i);
@@ -197,17 +222,43 @@ public class WorkbookController {
 			t.setCellValue(info.getTiming());
 			colorByIsInstruction(t, info.isIsInstruction());
 			Cell msg = r.createCell(1);
-			msg.setCellValue(info.getMessage());
+	        String wrappedInfoMsg = wrapTextAtWordBoundary(info.getMessage(), 50);
+	        msg.setCellValue(wrappedInfoMsg);
 			colorByOrigin(msg, info.getSourceConversationPartner().getName().equals("LLM"));
-			r.createCell(2).setCellValue(info.getTargetedBy().size());
-			r.createCell(3).setCellValue(info.getRepeatedBy().size());
+			Cell target = r.createCell(2);
+			target.setCellValue(info.getTargetedBy().size());
+			target.setCellStyle(targetStyle);
+			Cell repeated = r.createCell(3);
+			repeated.setCellValue(info.getRepeatedBy().size());
+			repeated.setCellStyle(repeatedStyle);
 			Float fTi = info.getFeltTrustImmediately();
 			Float fTa = info.getFeltTrustAfterwards();
 			float fTiCellValue = fTi != null ? fTi.floatValue() : Float.NaN;
 			float fTaCellValue = fTa != null ? fTa.floatValue() : Float.NaN;
 			setAndColorByValue(r.createCell(4), fTiCellValue);
 			setAndColorByValue(r.createCell(5), fTaCellValue);
+			r.setHeight((short)-1);
 		}
+	}
+	
+	private String wrapTextAtWordBoundary(String text, int maxLineLength) {
+	    if (text == null || text.length() <= maxLineLength) {
+	        return text;
+	    }
+	    StringBuilder wrappedText = new StringBuilder();
+	    int lineLength = 0;
+	    for (String word : text.split(" ")) {
+	        if (lineLength + word.length() > maxLineLength) {
+	            wrappedText.append("\n");
+	            lineLength = 0;
+	        } else if (wrappedText.length() > 0) {
+	            wrappedText.append(" ");
+	            lineLength += 1;
+	        }
+	        wrappedText.append(word);
+	        lineLength += word.length();
+	    }
+	    return wrappedText.toString();
 	}
 
 	public void addTrusts(HashMap<Information, Pair<Float, Float>> trusts, String name) {

@@ -44,7 +44,7 @@ def add_new_columns(ws):
         for i in range(len(cells)):
             if (i % 2 == 0):
                 cells[i].border = Border(left=b2)
-            cells[i].alignment = Alignment(horizontal='center')
+            cells[i].alignment = Alignment(horizontal='center', vertical='center')
             cells[i].number_format = "+0.00;-0.00;0.00"
 
 def fill_diff_columns(ws):
