@@ -197,8 +197,7 @@ public class WorkbookController {
 			t.setCellValue(-1);
 			colorByIsInstruction(t, pre.isIsInstruction());
 			Cell msg = r.createCell(1);
-		    String wrappedPreMsg = wrapTextAtWordBoundary(pre.getMessage(), 50);
-		    msg.setCellValue(wrappedPreMsg);
+		    msg.setCellValue(pre.getMessage());
 			colorByOrigin(msg, false);
 			Cell target = r.createCell(2);
 			target.setCellValue(pre.getTargetedBy().size());
@@ -222,8 +221,7 @@ public class WorkbookController {
 			t.setCellValue(info.getTiming());
 			colorByIsInstruction(t, info.isIsInstruction());
 			Cell msg = r.createCell(1);
-	        String wrappedInfoMsg = wrapTextAtWordBoundary(info.getMessage(), 50);
-	        msg.setCellValue(wrappedInfoMsg);
+	        msg.setCellValue(info.getMessage());
 			colorByOrigin(msg, info.getSourceConversationPartner().getName().equals("LLM"));
 			Cell target = r.createCell(2);
 			target.setCellValue(info.getTargetedBy().size());
@@ -239,26 +237,6 @@ public class WorkbookController {
 			setAndColorByValue(r.createCell(5), fTaCellValue);
 			r.setHeight((short)-1);
 		}
-	}
-	
-	private String wrapTextAtWordBoundary(String text, int maxLineLength) {
-	    if (text == null || text.length() <= maxLineLength) {
-	        return text;
-	    }
-	    StringBuilder wrappedText = new StringBuilder();
-	    int lineLength = 0;
-	    for (String word : text.split(" ")) {
-	        if (lineLength + word.length() > maxLineLength) {
-	            wrappedText.append("\n");
-	            lineLength = 0;
-	        } else if (wrappedText.length() > 0) {
-	            wrappedText.append(" ");
-	            lineLength += 1;
-	        }
-	        wrappedText.append(word);
-	        lineLength += word.length();
-	    }
-	    return wrappedText.toString();
 	}
 
 	public void addTrusts(HashMap<Information, Pair<Float, Float>> trusts, String name) {
@@ -291,7 +269,11 @@ public class WorkbookController {
 
 	private void sizeColumns() {
 		for (int i = 0; i < firstFreeColumn; i++) {
-			sheet.autoSizeColumn(i);
+			if (i == 1) {
+				sheet.setColumnWidth(i, 50*250);
+			} else {
+				sheet.autoSizeColumn(i);
+			}
 		}
 	}
 
