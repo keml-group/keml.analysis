@@ -6,22 +6,32 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import keml.analysis_server.utils.ExecutionMode;
+
 public class PythonExecutor {
 
-	public static boolean runPythonScript(String dirName, String path, boolean jarExecution) {
+	public static boolean runPythonScript(String filePath, String fileName, ExecutionMode executionMode) {
+		BufferedReader reader = null;
 		try {
 			List<String> commands = new ArrayList<>();
 			commands.add("python3");
-			if (jarExecution) {
+			switch(executionMode) {
+			case STANDARD:
+				commands.add("src/main/java/keml/analysis/py/main.py");
+				break;
+			case JAR:
+				commands.add("../src/main/java/keml/analysis/py/main.py");
+				break;
+			case DOCKER_JAR:
 				commands.add("/app/python-scripts/main.py");
-			} else {
-				commands.add("../keml.analysis/src/keml/analysis/py/main.py");
+				break;
 			}		
-			commands.add(dirName);
+			commands.add(filePath);
+			commands.add(fileName);
 			ProcessBuilder pb = new ProcessBuilder(commands);
 			pb.redirectErrorStream(true);
 			Process process = pb.start();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			String line;
 			while ((line = reader.readLine()) != null) {
 				System.out.println(line);
@@ -31,8 +41,15 @@ public class PythonExecutor {
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 			return false;
+		} finally {
+			try {
+				if (reader != null) {
+					reader.close();
+				}				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-
 	}
 
 }

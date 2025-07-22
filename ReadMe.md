@@ -12,9 +12,23 @@ If you freshly added maven to this project in Eclipse, it might be necessary to 
 
 ## Running
 
-This project is a basic maven based java application you can run in all normal ways (command line, IDE...).
-It has one optional input: the base folder. If none is given, it creates statistics on the introductory example from keml.sample - assuming that project is located on the same level as keml.sample.
+This project is a basic maven based java application you can run in all normal ways (command line, IDE...). There are two classes in the **analysis** package with main methods that can be run in these ways:
+The Main class has two optional inputs: a) a boolean flag runFurtherAnalysis deciding whether [Further Analysis](#further-analysis) is run and b) the path to the base folder. If none is given, the boolean flag is set to false and it creates statistics on the introductory example from keml.sample - assuming that project is located on the same level as keml.sample. If only one is given the argument will be the boolean flag.
+Alternatively you can run the AnalysisProvider class. It has an additional optional input: the name of a single file that should be analyzed. If none is given, it assumes that there is only one file in the base path folder.
 All output files are stored in the folder **analysis**.
+
+## Server running
+
+Instead of running the analysis directly on your device the project also offers the possiblity to run as a server so that you can access it via REST-API. There are 3 possible ways of running the Spring Boot Application server so that you can access it via REST-API:
+
+- **Spring Boot App:** With the Spring Tools plugin installed in your Eclipse IDE you can run the KemlAnalysisServerApplication class as a Spring Boot App directly
+- **Running JAR directly:** With the [KEML](https://github.com/keml-group/keml) and [KEML IO](https://github.com/keml-group/keml.io) projects installed in your local Maven repository, you can build a JAR with Maven that is saved in the target folder and can be executed from there with "java -jar kemlanalysisserver.jar JAR"
+- **Running JAR with Docker:** Instead of running the JAR yourself you can use the provided Dockerfile and build a Docker image to run the JAR inside of a Docker container with port 8080. This has the advantage that you do not need to install any additional software on your system for [Further Analysis](#further-analysis)
+
+The request must be sent as a HTTP POST request to \<IP-address\>:8080/api/process-json?runFurtherAnalysis=\<bool\> with a JSON body consisting of the content of the JSON file that should be analyzed. The flag runFurtherAnalysis is a boolean value having the same effect as described before.
+If successful, the request returns a ZIP file including all the files that resulted from the analysis of the sent JSON. The returned file has the name input_\<timestamp\>.zip.
+The first runtime argument when starting the application is the execution mode (STANDARD, JAR, DOCKER_JAR). When no argument is given STANDARD is used meaning that the program assumes it has been started as a Spring Boot App in Eclipse. When running the app with Docker the Dockerfile already includes the correct execution mode. Using an argument that does not equal one of the three named before, results in the application immediately shutting down.
+The second optional argument is the path of where the files are stored temporarily before being sent to the client. If no second argument is given the app again uses keml.sample/introductoryExamples as a base path assuming as before that the project is located on the same level as keml.sample.
 
 ## Output
 In **analysis**, each filename starts with a prefix _pre_ that is equal to the KEML file name.
@@ -93,7 +107,7 @@ We write $T_{init}(P)$ for { $T_{init}(i) | i$ from $p \in P$} and $T_{init}(LLM
 
 ### Further Analysis
 
-When running the server execution mode, setting the flag runFullAnalysis to true in the runtime arguments, enables an additonal analysis that provides statistics and graphics about the differences between the felt and the calculated trust. This analysis is done by a python script. Further info can be seen in [keml.py-analysis](src/keml/analysis/py/README.md).
+Further analysis enables an additonal analysis that provides statistics and graphics about the differences between the felt and the calculated trust. This analysis is executed by a python script. Further info can be seen in [keml.py-analysis](src/main/java/keml/analysis/py/README.md).
 
 
 ## License
