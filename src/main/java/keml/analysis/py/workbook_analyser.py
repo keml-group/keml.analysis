@@ -119,9 +119,8 @@ def create_stats(ws, path_t_h):
     for key in diffs_fT:
         diffs_fT[key][0] = [cells[0].value for cells in ws[f'{columns[key][0]}3:{columns[key][0]}{l}']]
         diffs_fT[key][1] = [cells[0].value for cells in ws[f'{columns[key][1]}3:{columns[key][1]}{l}']]
-		if None in diffs_fT[key][0]:
-			print("Cannot compute further analysis")
-			return False
+        if None in diffs_fT[key][0]:
+            return False
         if not os.path.exists(path_t_h):
             os.mkdir(path_t_h)
         create_histograms(path_t_h, diffs_fT, key)
