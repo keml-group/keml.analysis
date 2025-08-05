@@ -19,8 +19,10 @@ def main():
                 continue
             f_s = os.path.join(user_dir_path, ana_file)          
             h_t = f'{user_dir_path}/stats_{file_name}/{os.path.splitext(ana_file)[0]}'
-            workbook_editor.insert_rand_values(f_s)
-            workbook_analyser.run_wb_analysis(f_s, h_t)
+            success = workbook_analyser.run_wb_analysis(f_s, h_t)
+            if not success:
+                 print("Cannot provide further analysis if felt trusts are not set.")
+                 return
 
 if __name__ == '__main__':
 	main()

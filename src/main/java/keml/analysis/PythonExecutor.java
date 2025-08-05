@@ -51,5 +51,9 @@ public class PythonExecutor {
 			}
 		}
 	}
+	
+	public static void main(String[] args) {
+		runPythonScript("../keml.sample/introductoryExamples/analysis/2-1-keml", "2-1-keml", ExecutionMode.STANDARD);
+	}
 
 }

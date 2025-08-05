@@ -44,7 +44,7 @@ def add_new_columns(ws):
         for i in range(len(cells)):
             if (i % 2 == 0):
                 cells[i].border = Border(left=b2)
-            cells[i].alignment = Alignment(horizontal='center')
+            cells[i].alignment = Alignment(horizontal='center', vertical='center')
             cells[i].number_format = "+0.00;-0.00;0.00"
 
 def fill_diff_columns(ws):
@@ -73,9 +73,10 @@ def run_wb_analysis(path_f, path_h):
     ws = wb['Trust']
     add_new_columns(ws)
     fill_diff_columns(ws)
-    create_stats(ws, path_h) 
+    success = create_stats(ws, path_h) 
     wb.save(path_f)
     wb.close()
+    return success
 
 def create_histograms(path_t_h, diffs_fT, key):
     fig = plt.figure(figsize=(10,4))
@@ -118,6 +119,8 @@ def create_stats(ws, path_t_h):
     for key in diffs_fT:
         diffs_fT[key][0] = [cells[0].value for cells in ws[f'{columns[key][0]}3:{columns[key][0]}{l}']]
         diffs_fT[key][1] = [cells[0].value for cells in ws[f'{columns[key][1]}3:{columns[key][1]}{l}']]
+        if '#NUM!' in diffs_fT[key][0]:
+            return False
         if not os.path.exists(path_t_h):
             os.mkdir(path_t_h)
         create_histograms(path_t_h, diffs_fT, key)
@@ -148,15 +151,33 @@ def create_stats(ws, path_t_h):
                 cells[1].value = std_abs_diffs_fT[key][1]
             i += 1
     stat_names = ['Mean of |fT_ - F(mode)|', 'Variance of |fT_ - F(mode)|', 'Standard deviation of |fT_ - F(mode)|']
-    b1 = Side(border_style="medium", color="000000")
+    b1 = Side(border_style="medium", color="FFFFFF")
+    mean_fill = PatternFill(start_color='629BF0', end_color='629BF0', fill_type='solid')
+    var_fill = PatternFill(start_color='E79221', end_color='E79221', fill_type='solid')
+    std_fill = PatternFill(start_color='8ECA3E', end_color='8ECA3E', fill_type='solid')
     k = 0
-    ws.column_dimensions['N'].width = np.max([len(stat_name) for stat_name in stat_names])
-    for cells in ws[f'N{l + 3}:V{l + 5}']:
-        cells[0].alignment = Alignment(horizontal='right')
+    for cells in ws[f'B{l + 3}:B{l + 5}']:
+        cells[0].alignment = Alignment(horizontal='left')
         cells[0].value = stat_names[k]
-        for i in range(1, len(cells)):
-            if (i % 2 != 0):
-                cells[i].border = Border(left=b1)
+        match k:
+            case 0:
+                cells[0].fill = mean_fill
+            case 1:
+                cells[0].fill = var_fill
+            case 2:
+                cells[0].fill = std_fill
         k+=1
-     
-    
+    k = 0
+    for cells in ws[f'O{l + 3}:V{l + 5}']:
+        for i in range(0, len(cells)):
+            if ((i + 1) % 2 != 0):
+                cells[i].border = Border(left=b1)
+            match k:
+                case 0:
+                    cells[i].fill = mean_fill
+                case 1:
+                    cells[i].fill = var_fill
+                case 2:
+                    cells[i].fill = std_fill
+        k+=1
+    return True
